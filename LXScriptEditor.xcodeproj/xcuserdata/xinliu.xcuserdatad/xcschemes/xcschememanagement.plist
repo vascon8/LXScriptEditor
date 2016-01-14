@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>EditEXample.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>LXScriptEditor.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -12,6 +17,16 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>0F1D8D791C478C78009872B6</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0F1D8D931C478C79009872B6</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>0FF7DFAA1C473FA000FF8400</key>
 		<dict>
 			<key>primary</key>
