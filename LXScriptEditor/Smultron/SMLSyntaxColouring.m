@@ -1915,6 +1915,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  */
 - (void)textDidChange:(NSNotification *)notification
 {
+//    NSLog(@"==textchange:%@",notification);
 	// send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:notification];
 
@@ -1941,7 +1942,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	
 	if (autocompleteWordsTimer != nil) {
 		[autocompleteWordsTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue]]];
-	} else if ([[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteSuggestAutomatically] boolValue] == YES) {
+	} else if ([[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteSuggestAutomatically] boolValue] == YES && textView.isInsertCharacter) {
 		autocompleteWordsTimer = [NSTimer scheduledTimerWithTimeInterval:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue] target:self selector:@selector(autocompleteWordsTimerSelector:) userInfo:textView repeats:NO];
 	}
 	
@@ -2027,8 +2028,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  - textViewDidChangeSelection:
  
  */
+
 - (void)textViewDidChangeSelection:(NSNotification *)aNotification
 {
+//    NSLog(@"====changeselection:%@",aNotification);
 	// send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:aNotification];
 
@@ -2196,9 +2199,12 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 - (void)autocompleteWordsTimerSelector:(NSTimer *)theTimer
 {
 	SMLTextView *textView = [theTimer userInfo];
+    
 	NSRange selectedRange = [textView selectedRange];
 	NSString *completeString = [self completeString];
 	NSUInteger stringLength = [completeString length];
+    
+//    NSLog(@"selectedRange:%@,comstr:%@,strlength:%ld",NSStringFromRange(selectedRange),completeString,stringLength);
     
 	if (selectedRange.location <= stringLength && selectedRange.length == 0 && stringLength != 0) {
 		if (selectedRange.location == stringLength) { // If we're at the very end of the document
@@ -2206,6 +2212,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		} else {
 			unichar characterAfterSelection = [completeString characterAtIndex:selectedRange.location];
 			if ([[NSCharacterSet symbolCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet whitespaceAndNewlineCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet punctuationCharacterSet] characterIsMember:characterAfterSelection] || selectedRange.location == stringLength) { // Don't autocomplete if we're in the middle of a word
+//                NSLog(@"complete===");
 				[textView complete:nil];
 			}
 		}

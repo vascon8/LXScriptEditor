@@ -129,7 +129,7 @@ static id sharedInstance = nil;
 	[dictionary setValue:[NSNumber numberWithInteger:4] forKey:MGSFragariaPrefsIndentWidth];
     [dictionary setValue:[NSNumber numberWithBool:NO] forKey:MGSFragariaPrefsShowPageGuide];
 	[dictionary setValue:[NSNumber numberWithInteger:80] forKey:MGSFragariaPrefsShowPageGuideAtColumn];
-	[dictionary setValue:[NSNumber numberWithFloat:1.0f] forKey:MGSFragariaPrefsAutocompleteAfterDelay];
+	[dictionary setValue:[NSNumber numberWithFloat:0.0f] forKey:MGSFragariaPrefsAutocompleteAfterDelay];
 	
 	[dictionary setValue:[NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Menlo" size:11]] forKey:MGSFragariaPrefsTextFont];
 	

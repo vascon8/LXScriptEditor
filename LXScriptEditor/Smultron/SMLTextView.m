@@ -456,9 +456,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
  - insertText:
  
  */
-/*
 - (void)insertText:(NSString *)aString
 {
+//    NSLog(@"insert:%@",aString);
+    self.isInsertCharacter = NO;
+    if (aString.length>0) {
+        if([[NSCharacterSet alphanumericCharacterSet] characterIsMember:[aString characterAtIndex:0]]) self.isInsertCharacter = YES;
+    }
+    
+    
 	if ([aString isEqualToString:@"}"] && [[SMLDefaults valueForKey:MGSFragariaPrefsIndentNewLinesAutomatically] boolValue] == YES && [[SMLDefaults valueForKey:MGSFragariaPrefsAutomaticallyIndentBraces] boolValue] == YES) {
 		unichar characterToCheck;
 		NSInteger location = [self selectedRange].location;
@@ -547,7 +553,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 		[super insertText:aString];
 	}
 }
-*/
+
 /*
  
  - insertNewline:
@@ -983,8 +989,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (NSRange)rangeForUserCompletion
 {
-    NSLog(@"rangeForUsercompletaion===");
-    
     NSRange cursor = [self selectedRange];
     NSUInteger loc = cursor.location;
     
@@ -1028,8 +1032,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
             break;
         }
     }
-    
-    return NSMakeRange(loc-numChars, numChars);
+    NSRange resultRange = NSMakeRange(loc-numChars, numChars);
+//    NSLog(@"rangeForUsercompletaion===%@",NSStringFromRange(resultRange));
+    return resultRange;
 }
 
 /*
@@ -1040,19 +1045,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 - (NSArray*)completionsForPartialWordRange:(NSRange)charRange indexOfSelectedItem:(NSInteger *)index
 {
 #pragma unused(index, charRange)
-    NSLog(@"completion==range:%@,index:%zi",NSStringFromRange(charRange),index);
+    
     // get completion handler
     NSMutableArray* matchArray = [NSMutableArray array];
+    
     id<SMLAutoCompleteDelegate> completeHandler = [fragaria.docSpec valueForKey:MGSFOAutoCompleteDelegate];
 
+    // get string to match
+    NSString *matchString = [[self string] substringWithRange:charRange];
+    
     // use handler
     if (completeHandler) {
         
         // get all completions
         NSArray* allCompletions = [completeHandler completions];
         
-        // get string to match
-        NSString *matchString = [[self string] substringWithRange:charRange];
+        //add to avoid replace the current input string
+//        [matchArray addObject:matchString];
         
         // build array of suitable suggestions
         for (NSString* completeWord in allCompletions)
@@ -1064,10 +1073,36 @@ Unless required by applicable law or agreed to in writing, software distributed 
         }
     }
     
+    // extract words in document and set to candidateWords
+    if (matchString.length>0) {
+ 
+        if (charRange.length == 1 && ![[NSCharacterSet alphanumericCharacterSet] characterIsMember:[matchString characterAtIndex:0]]) {
+            // do nothing if the particle word is an symbol
+            
+        } else {
+            NSString *documentString = [self string];
+            NSString *pattern = [NSString stringWithFormat:@"(?:^|\\b|(?<=\\W))%@\\w+?(?:$|\\b)",
+                                 [NSRegularExpression escapedPatternForString:matchString]];
+            NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
+            [regex enumerateMatchesInString:documentString options:0
+                                      range:NSMakeRange(0, [documentString length])
+                                 usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop)
+             {
+                 NSString *matchResultInDocument = [documentString substringWithRange:[result range]];
+                 if(![matchArray containsObject:matchResultInDocument])[matchArray addObject:matchResultInDocument];
+             }];
+        }
+    }
+    
+//    NSLog(@"completion==range:%@,matchArr:%@",NSStringFromRange(charRange),matchArray);
     return matchArray;
 }
-
-
+- (void)insertCompletion:(NSString *)word forPartialWordRange:(NSRange)charRange movement:(NSInteger)movement isFinal:(BOOL)flag
+{
+    if (movement == NSReturnTextMovement || movement == NSTabTextMovement) {
+        [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
+    }
+}
 #pragma mark -
 #pragma mark NSView
 
