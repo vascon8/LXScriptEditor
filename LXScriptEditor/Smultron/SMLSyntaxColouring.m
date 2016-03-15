@@ -21,6 +21,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "MGSFragaria.h"
 #import "MGSFragariaFramework.h"
 
+#import "LanguageTool.h"
+
 // syntax colouring information dictionary keys
 NSString *SMLSyntaxGroup = @"group";
 NSString *SMLSyntaxGroupID = @"groupID";
@@ -400,6 +402,9 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsColourAutocomplete] boolValue] == YES) {
 		self.keywords = [NSSet setWithArray:keywordsAndAutocompleteWordsTemporary];
 	}
+    
+    //analyse language lib
+    [self languageLibAnaly];
 	
     // keywords and autocomplete words
 	self.keywordsAndAutocompleteWords = [keywordsAndAutocompleteWordsTemporary sortedArrayUsingSelector:@selector(compare:)];
@@ -2222,6 +2227,12 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		[autocompleteWordsTimer invalidate];
 		autocompleteWordsTimer = nil;
 	}
+}
+//analy language lib for auto complete
+#pragma mark - language lib analy
+- (void)languageLibAnaly
+{
+    [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] path:nil];
 }
 
 #pragma mark -
