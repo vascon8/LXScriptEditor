@@ -11,19 +11,22 @@
 @implementation LanguageTool
 //+ (void)analyLanguage:(NSString*)lang path:(NSArray*)pathArr scriptCurrentDir:(NSString*)currentDir
 //{}
-+ (void)analyLanguage:(NSString*)lang path:(NSArray*)pathArr
++ (NSArray*)analyLanguage:(NSString*)lang path:(NSArray*)pathArr
 {
+    NSArray *arr = nil;
     if ([[lang lowercaseString] isEqualToString:@"python"]) {
-        [self validatePython];
+        arr = [self validatePython];
     }
+    
+    return arr;
 }
 #pragma mark - validate language
 #pragma mark python
-+ (void)validatePython
++ (NSArray*)validatePython
 {
     NSString *commandStr = @"python -V;echo $?";
-    
     NSString *output = [self runTaskInUserShellWithCommand:commandStr];
+    NSMutableArray *keywordArr = nil;
     
     if ([self isTaskSuccessfulByRC:output]) {
         NSString *analyStr = @"python -c \"import sys;print(sys.path);\"";
@@ -49,8 +52,9 @@
 
             }
         }
-        NSLog(@"%@",arrM);
-        NSMutableArray *keywordArr = [NSMutableArray new];
+//        NSLog(@"%@",arrM);
+        
+        keywordArr = [NSMutableArray new];
         for (NSString *path in arrM) {
             //judge time
             
@@ -71,60 +75,81 @@
             if([[NSFileManager defaultManager]fileExistsAtPath:tmpPath isDirectory:&isDir]){
                 NSLog(@"=unzip successful:%@",tmpPath);
                 if (isDir) {
-                    NSDirectoryEnumerator *enumator = [[NSFileManager defaultManager]enumeratorAtPath:tmpPath];
-                    NSString *dirName;
-                    while (dirName = [enumator nextObject]) {
-                        NSLog(@"dirName:%@",dirName);
-                        NSRange range = [[eggName lowercaseString] rangeOfString:[dirName lowercaseString]];
-                        if (range.location!=NSNotFound) {
-                            NSString *libPrefix = [NSString stringWithFormat:@"from %@",dirName];
-                            if(![keywordArr containsObject:libPrefix]) [keywordArr addObject:libPrefix];
-                            
-                            NSString *libPath = [tmpPath stringByAppendingPathComponent:dirName];
-                            NSLog(@"libPath:%@",libPath);
-                            [self enuLibPath:libPath prefix:libPrefix];
+                    
+                    NSError *error=nil;
+                    NSArray *contsArr = [[NSFileManager defaultManager]contentsOfDirectoryAtPath:tmpPath error:&error];
+                    if (!error && contsArr) {
+                        for (NSString *dirName in contsArr) {
+                            NSRange range = [[eggName lowercaseString] rangeOfString:[dirName lowercaseString]];
+                            if (range.location!=NSNotFound) {
+                                NSString *libPrefix = [NSString stringWithFormat:@"from %@",dirName];
+                                if(![keywordArr containsObject:libPrefix]) [keywordArr addObject:libPrefix];
+                                
+                                NSString *libPath = [tmpPath stringByAppendingPathComponent:dirName];
+                                NSLog(@"libPath:%@",libPath);
+                                [keywordArr addObjectsFromArray:[self enuLibPath:libPath prefix:libPrefix]];
+                            }
                         }
                     }
                 }
             }
         }
     }
+    NSLog(@"key:%@",keywordArr);
+    return keywordArr;
 }
-+ (void)enuLibPath:(NSString*)libPath prefix:(NSString*)prefix
++ (NSArray*)enuLibPath:(NSString*)libPath prefix:(NSString*)prefix
 {
-    NSDirectoryEnumerator *libEnu = [[NSFileManager defaultManager]enumeratorAtPath:libPath];
-    NSString *compName;
-    
-    NSMutableArray *arrM = [NSMutableArray new];
-    [arrM addObjectsFromArray:[self analyFileUnderDir:libPath prefix:prefix]];
-    
-    while (compName = [libEnu nextObject]) {
-        NSString *compPath = [libPath stringByAppendingPathComponent:compName];
-        BOOL isDir;
-        if([[NSFileManager defaultManager]fileExistsAtPath:compPath isDirectory:&isDir]){
-            if (isDir) {
-                NSString *dirPrefix = [NSString stringWithFormat:@"%@.%@",prefix,compName];
-                if(![arrM containsObject:compName]) [arrM addObject:compName];
-                
-                [self enuLibPath:compPath prefix:dirPrefix];
+    BOOL isDir;
+    NSMutableArray *arrM = nil;
+    if([[NSFileManager defaultManager]fileExistsAtPath:libPath isDirectory:&isDir])
+    {
+        arrM = [NSMutableArray new];
+        NSString *tmpLibKey = [libPath lastPathComponent];
+        [arrM addObjectsFromArray:[self analyFileUnderDir:libPath prefix:prefix libPath:tmpLibKey]];
+        
+        if (isDir)
+        {
+            NSDirectoryEnumerator *libEnu = [[NSFileManager defaultManager]enumeratorAtPath:libPath];
+            NSString *compName;
+            
+            while (compName = [libEnu nextObject]) {
+                NSLog(@"===compName:%@",compName);
+                NSString *compPath = [libPath stringByAppendingPathComponent:compName];
+                BOOL subIsDir;
+                if([[NSFileManager defaultManager]fileExistsAtPath:compPath isDirectory:&subIsDir]){
+                    if (subIsDir) {
+                        NSString *tmpName = compName;
+                        tmpName = [compName stringByReplacingOccurrencesOfString:@"/" withString:@"."];
+                        
+//                        if(![arrM containsObject:tmpName]) [arrM addObject:tmpName];
+                        
+                        NSString *dirPrefix = [NSString stringWithFormat:@"%@.%@",prefix,tmpName];
+                        
+                        NSString *libKey = [NSString stringWithFormat:@"%@.%@",[libPath lastPathComponent],tmpName];
+                        [arrM addObjectsFromArray:[self analyFileUnderDir:compPath prefix:dirPrefix libPath:libKey]];
+                    }
+                }
             }
         }
     }
     
-
+    return arrM;
 }
-+ (NSArray*)analyFileUnderDir:(NSString*)dir prefix:(NSString*)prefix
++ (NSArray*)analyFileUnderDir:(NSString*)dir prefix:(NSString*)prefix libPath:(NSString*)libPath
 {
     NSMutableArray *arrM = [NSMutableArray new];
-    NSString *defCommand = @"grep \"def \" *.py|grep -v \"def __\"";
-    NSString *defOutput = [self runTaskInUserShellWithCommand:defCommand];
+    NSString *defCommand = @"ls *.py|grep -v __*.py|xargs egrep \"^ {0,}def \"|grep -v \"def _\"";
+    NSString *defOutput = [self runTaskInUserShellWithCommand:defCommand currentPath:dir];
     NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
     [arrM addObjectsFromArray:[self analyDefOutput:defOutput prefix:nil]];
     
-    NSString *classCommand = @"grep \"class \" *.py";
-    NSString *classOutput = [self runTaskInUserShellWithCommand:classCommand];
+    NSString *classCommand = @"ls *.py|grep -v __*.py|xargs egrep -H \"^ {0,}class \"|grep -v \"class _\"";
+    NSString *classOutput = [self runTaskInUserShellWithCommand:classCommand currentPath:dir];
     NSLog(@"dir:%@ ==classOut:%@\n",dir,classOutput);
-    [arrM addObjectsFromArray:[self analyClassOutput:classOutput prefix:@"import"]];
+//    NSString *cPrefix = @"import";
+//    if(prefix) cPrefix = [NSString stringWithFormat:@"%@ import",prefix];
+    [arrM addObjectsFromArray:[self analyClassOutput:classOutput prefix:prefix libPath:libPath]];
     
     NSLog(@"analy file key:%@\n",arrM);
     return arrM;
@@ -134,30 +159,58 @@
     NSString *bSep = @"def ";
     NSString *fSep = @"(";
     
-    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix];
+    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix libPath:nil];
 }
-+ (NSArray*)analyClassOutput:(NSString*)output prefix:(NSString*)prefix
++ (NSArray*)analyClassOutput:(NSString*)output prefix:(NSString*)prefix libPath:(NSString*)libPath
 {
     NSString *bSep = @"class ";
     NSString *fSep = @"(";
     
-    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix];
+    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix libPath:libPath];
 }
-+ (NSArray*)analyGrepOutput:(NSString*)output beginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep prefix:(NSString*)prefix
++ (NSArray*)analyGrepOutput:(NSString*)output beginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep prefix:(NSString*)prefix libPath:(NSString*)libPath
 {
     NSArray *comps = [output componentsSeparatedByString:@"\n"];
     NSMutableArray *arrM = [NSMutableArray new];
     
     for (NSString *line in comps) {
         NSString *keyName = [self rangeOfString:line byBeginSeperator:bSep finishSeperator:fSep];
+        NSLog(@"keyName:%@",keyName);
         if(keyName) {
             NSString *keywords;
-            if(prefix) [NSString stringWithFormat:@"%@.%@",prefix,keyName];
+            
+            //it is class
+            if(prefix) {
+                if(![arrM containsObject:keyName]) [arrM addObject:keyName];
+                
+                NSInteger i = 0;
+                while ((i < line.length)
+                       && [[NSCharacterSet whitespaceCharacterSet] characterIsMember:[line characterAtIndex:i]]) {
+                    i++;
+                }
+                line = [line substringFromIndex:i];
+                
+                NSRange range = [line rangeOfString:@".py"];
+                NSString *fileName = nil;
+                if(range.location!=NSNotFound) fileName = [line substringToIndex:range.location];
+                
+                if(fileName) {
+                    keywords = [NSString stringWithFormat:@"%@.%@ import %@",prefix,fileName,keyName];
+                    if(![arrM containsObject:fileName]) [arrM addObject:fileName];
+                    
+                    if(libPath){
+                        NSString *libToFile = [NSString stringWithFormat:@"%@.%@ import %@",libPath,fileName,keyName];
+                        if(![arrM containsObject:libToFile]) [arrM addObject:libToFile];
+                    }
+                }
+                else keywords = [NSString stringWithFormat:@"%@ import %@",prefix,keyName];
+            }
             else keywords = keyName;;
+
             if(![arrM containsObject:keywords]) [arrM addObject:keywords];
         }
     }
-    
+//    NSLog(@"arrM:%@",arrM);
     return arrM;
 }
 + (NSString*)rangeOfString:(NSString*)str byBeginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep
@@ -166,7 +219,7 @@
     NSRange fRange = [str rangeOfString:fSep];
     NSString *result=nil;
     if (bRange.location!=NSNotFound&&fRange.location!=NSNotFound&&fRange.location>bRange.location+1) {
-        NSRange range = NSMakeRange(bRange.location+1,fRange.location-bRange.location-1);
+        NSRange range = NSMakeRange(bRange.location+bSep.length,fRange.location-bRange.location-bSep.length);
         result = [str substringWithRange:range];
     }
     return result;

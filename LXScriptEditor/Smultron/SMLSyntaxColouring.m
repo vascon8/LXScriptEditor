@@ -397,14 +397,23 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		self.autocompleteWords = [[NSSet alloc] initWithArray:value];
 		[keywordsAndAutocompleteWordsTemporary addObjectsFromArray:value];
 	}
+    
+    //analyse language lib
+    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] path:nil];
+    if (libKeywords) {
+        [keywordsAndAutocompleteWordsTemporary addObjectsFromArray:libKeywords];
+    }
+    
+    NSMutableArray *arrTemp = [NSMutableArray new];
+    for (NSString *str in keywordsAndAutocompleteWordsTemporary) {
+        if(![arrTemp containsObject:str]) [arrTemp addObject:str];
+    }
+    keywordsAndAutocompleteWordsTemporary = arrTemp;
 	
     // colour autocomplete words is a preference
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsColourAutocomplete] boolValue] == YES) {
 		self.keywords = [NSSet setWithArray:keywordsAndAutocompleteWordsTemporary];
 	}
-    
-    //analyse language lib
-    [self languageLibAnaly];
 	
     // keywords and autocomplete words
 	self.keywordsAndAutocompleteWords = [keywordsAndAutocompleteWordsTemporary sortedArrayUsingSelector:@selector(compare:)];
