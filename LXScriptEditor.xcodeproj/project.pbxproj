@@ -21,6 +21,8 @@
 		0F1D8DAB1C478CD9009872B6 /* EditViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D8DAA1C478CD9009872B6 /* EditViewController.m */; };
 		0F1D8DAD1C478D39009872B6 /* EditView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0F1D8DAC1C478D39009872B6 /* EditView.xib */; };
 		0F1D8DAE1C478DEF009872B6 /* LXScriptEditor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FF7DFAB1C473FA000FF8400 /* LXScriptEditor.framework */; };
+		0FBC7CE01C96B87E0086F3E3 /* LanguageTool.h in Headers */ = {isa = PBXBuildFile; fileRef = 0FBC7CDE1C96B87E0086F3E3 /* LanguageTool.h */; };
+		0FBC7CE11C96B87E0086F3E3 /* LanguageTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC7CDF1C96B87E0086F3E3 /* LanguageTool.m */; };
 		0FF7DFAF1C473FA000FF8400 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FF7DFAE1C473FA000FF8400 /* Cocoa.framework */; };
 		0FF7DFBD1C473FA000FF8400 /* LXScriptEditor.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FF7DFBC1C473FA000FF8400 /* LXScriptEditor.m */; };
 		0FF7DFC41C473FA000FF8400 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FF7DFC31C473FA000FF8400 /* XCTest.framework */; };
@@ -147,6 +149,8 @@
 		0F1D8DA91C478CD9009872B6 /* EditViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditViewController.h; sourceTree = "<group>"; };
 		0F1D8DAA1C478CD9009872B6 /* EditViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditViewController.m; sourceTree = "<group>"; };
 		0F1D8DAC1C478D39009872B6 /* EditView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EditView.xib; sourceTree = "<group>"; };
+		0FBC7CDE1C96B87E0086F3E3 /* LanguageTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanguageTool.h; sourceTree = "<group>"; };
+		0FBC7CDF1C96B87E0086F3E3 /* LanguageTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LanguageTool.m; sourceTree = "<group>"; };
 		0FF7DFAB1C473FA000FF8400 /* LXScriptEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LXScriptEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FF7DFAE1C473FA000FF8400 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		0FF7DFB11C473FA000FF8400 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -411,6 +415,15 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		0FBC7CDD1C96B3050086F3E3 /* LanguageTool */ = {
+			isa = PBXGroup;
+			children = (
+				0FBC7CDE1C96B87E0086F3E3 /* LanguageTool.h */,
+				0FBC7CDF1C96B87E0086F3E3 /* LanguageTool.m */,
+			);
+			path = LanguageTool;
+			sourceTree = "<group>";
+		};
 		0FF7DFA11C473FA000FF8400 = {
 			isa = PBXGroup;
 			children = (
@@ -460,6 +473,7 @@
 		0FF7DFB41C473FA000FF8400 /* LXScriptEditor */ = {
 			isa = PBXGroup;
 			children = (
+				0FBC7CDD1C96B3050086F3E3 /* LanguageTool */,
 				0FF7DFD91C47400C00FF8400 /* Fragaria */,
 				0FF7DFF61C47400C00FF8400 /* ICU */,
 				0FF7E0101C47400C00FF8400 /* Smultron */,
@@ -746,6 +760,7 @@
 				0FF7E0AC1C47400D00FF8400 /* ICUPattern.h in Headers */,
 				0FF7E08F1C47400C00FF8400 /* MGSGlyphGenerator.h in Headers */,
 				0FF7E0B51C47400D00FF8400 /* SMLGutterTextView.h in Headers */,
+				0FBC7CE01C96B87E0086F3E3 /* LanguageTool.h in Headers */,
 				0FF7E0BB1C47400D00FF8400 /* SMLStandardHeader.h in Headers */,
 				0FF7E07F1C47400C00FF8400 /* FRAFontTransformer.h in Headers */,
 				0FF7E0971C47400D00FF8400 /* NSScanner+Fragaria.h in Headers */,
@@ -937,6 +952,7 @@
 				0FF7E0C31C47400D00FF8400 /* SMLTextPerformer.m in Sources */,
 				0FF7E08E1C47400C00FF8400 /* MGSFragariaTextEditingPrefsViewController.m in Sources */,
 				0FF7E0B61C47400D00FF8400 /* SMLGutterTextView.m in Sources */,
+				0FBC7CE11C96B87E0086F3E3 /* LanguageTool.m in Sources */,
 				0FF7E0831C47400C00FF8400 /* MGSExtraInterfaceController.m in Sources */,
 				0FF7E08A1C47400C00FF8400 /* MGSFragariaPreferences.m in Sources */,
 				0FF7E07E1C47400C00FF8400 /* DBPrefsWindowController.m in Sources */,
@@ -1279,6 +1295,7 @@
 				0F1D8DA21C478C79009872B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0F1D8DA61C478C79009872B6 /* Build configuration list for PBXNativeTarget "EditEXampleTests" */ = {
 			isa = XCConfigurationList;
@@ -1287,6 +1304,7 @@
 				0F1D8DA41C478C79009872B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0FF7DFA51C473FA000FF8400 /* Build configuration list for PBXProject "LXScriptEditor" */ = {
 			isa = XCConfigurationList;
