@@ -39,6 +39,15 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0F1D8D791C478C78009872B6"
+            BuildableName = "EditEXample.app"
+            BlueprintName = "EditEXample"
+            ReferencedContainer = "container:LXScriptEditor.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </TestAction>
    <LaunchAction
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
@@ -49,6 +58,15 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0F1D8D791C478C78009872B6"
+            BuildableName = "EditEXample.app"
+            BlueprintName = "EditEXample"
+            ReferencedContainer = "container:LXScriptEditor.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

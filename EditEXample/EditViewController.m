@@ -51,7 +51,7 @@
         [self.fragaria embedInView:self.view];
         self.editController = [MGSFragariaPreferences sharedInstance].textEditingPrefsViewController;
         
-        NSString *path = @"/Users/xinliu/TestWA/abc/RecordScript/weibo_webView_iOS_12021612.py" ;
+        NSString *path = @"/Users/xinliu/TestWA/New_Project16/RecordScript/今日头条_Android_12121724.py" ;
         NSString *str =  [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
         
         [self.fragaria setObject:@"python" forKey:MGSFOSyntaxDefinitionName];

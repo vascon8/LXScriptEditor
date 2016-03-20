@@ -73,7 +73,7 @@
             
             BOOL isDir;
             if([[NSFileManager defaultManager]fileExistsAtPath:tmpPath isDirectory:&isDir]){
-                NSLog(@"=unzip successful:%@",tmpPath);
+//                NSLog(@"=unzip successful:%@",tmpPath);
                 if (isDir) {
                     
                     NSError *error=nil;
@@ -86,7 +86,7 @@
                                 if(![keywordArr containsObject:libPrefix]) [keywordArr addObject:libPrefix];
                                 
                                 NSString *libPath = [tmpPath stringByAppendingPathComponent:dirName];
-                                NSLog(@"libPath:%@",libPath);
+//                                NSLog(@"libPath:%@",libPath);
                                 [keywordArr addObjectsFromArray:[self enuLibPath:libPath prefix:libPrefix]];
                             }
                         }
@@ -114,7 +114,7 @@
             NSString *compName;
             
             while (compName = [libEnu nextObject]) {
-                NSLog(@"===compName:%@",compName);
+//                NSLog(@"===compName:%@",compName);
                 NSString *compPath = [libPath stringByAppendingPathComponent:compName];
                 BOOL subIsDir;
                 if([[NSFileManager defaultManager]fileExistsAtPath:compPath isDirectory:&subIsDir]){
@@ -141,17 +141,17 @@
     NSMutableArray *arrM = [NSMutableArray new];
     NSString *defCommand = @"ls *.py|grep -v __*.py|xargs egrep \"^ {0,}def \"|grep -v \"def _\"";
     NSString *defOutput = [self runTaskInUserShellWithCommand:defCommand currentPath:dir];
-    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
+//    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
     [arrM addObjectsFromArray:[self analyDefOutput:defOutput prefix:nil]];
     
     NSString *classCommand = @"ls *.py|grep -v __*.py|xargs egrep -H \"^ {0,}class \"|grep -v \"class _\"";
     NSString *classOutput = [self runTaskInUserShellWithCommand:classCommand currentPath:dir];
-    NSLog(@"dir:%@ ==classOut:%@\n",dir,classOutput);
+//    NSLog(@"dir:%@ ==classOut:%@\n",dir,classOutput);
 //    NSString *cPrefix = @"import";
 //    if(prefix) cPrefix = [NSString stringWithFormat:@"%@ import",prefix];
     [arrM addObjectsFromArray:[self analyClassOutput:classOutput prefix:prefix libPath:libPath]];
     
-    NSLog(@"analy file key:%@\n",arrM);
+//    NSLog(@"analy file key:%@\n",arrM);
     return arrM;
 }
 + (NSArray*)analyDefOutput:(NSString*)output prefix:(NSString*)prefix
@@ -175,13 +175,15 @@
     
     for (NSString *line in comps) {
         NSString *keyName = [self rangeOfString:line byBeginSeperator:bSep finishSeperator:fSep];
-        NSLog(@"keyName:%@",keyName);
+        
+//        NSLog(@"keyName:%@",keyName);
         if(keyName) {
             NSString *keywords;
             
             //it is class
             if(prefix) {
-                if(![arrM containsObject:keyName]) [arrM addObject:keyName];
+                NSString *tokenKeyName = [NSString stringWithFormat:@"%@(<!#Hello World#!>)",keyName];
+                if(![arrM containsObject:tokenKeyName]) [arrM addObject:tokenKeyName];
                 
                 NSInteger i = 0;
                 while ((i < line.length)

@@ -22,6 +22,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "MGSFragariaFramework.h"
 #import "SMLAutoCompleteDelegate.h"
 
+#import "LXTextAttachment.h"
+
 // class extension
 @interface SMLTextView()
 - (void)windowDidBecomeMainOrKey:(NSNotification *)note;
@@ -596,6 +598,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)setString:(NSString *)aString
 {
+    NSLog(@"===setstring=");
 	[super setString:aString];
 	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
 }
@@ -658,6 +661,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)setAttributedString:(NSAttributedString *)text
 {
+    NSLog(@"==setAttrstr==");
     NSTextStorage *textStorage = [self textStorage];
     [textStorage setAttributedString:text];
     [[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
@@ -726,6 +730,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)appendString:(NSString *)aString
 {
+    NSLog(@"===appendstr==");
     NSMutableString * string = [NSMutableString stringWithString:[super string]];
     [string appendString:aString];
     [self setString:string];
@@ -1101,7 +1106,43 @@ Unless required by applicable law or agreed to in writing, software distributed 
 {
     if (movement == NSReturnTextMovement || movement == NSTabTextMovement) {
         [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
+        [self addToken:word];
     }
+}
+#pragma mark - token
+- (void)addToken:(NSString*)word
+{
+    //<!#TokenStr#!>
+    if ([word hasSuffix:@"#!>)"]) {
+        NSRange tokenBRange = [word rangeOfString:@"(<!#"];
+        if (tokenBRange.location!=NSNotFound) {
+            NSRange selectedRange = self.selectedRange;
+            
+            NSRange tokenStrRange = NSMakeRange(tokenBRange.location+1, word.length-tokenBRange.location-2);
+            NSString *tokenStr = [word substringWithRange:tokenStrRange];
+            
+            NSRange tokenEffecRange = NSMakeRange(selectedRange.location+tokenBRange.location-1, tokenStr.length);
+            
+            NSLog(@"selectRange:%@,tokenStrRange:%@,str:%@,tokenEffect:%@",NSStringFromRange(selectedRange),NSStringFromRange(tokenStrRange),tokenStr,NSStringFromRange(tokenEffecRange));
+            
+            NSAttributedString *insertionText = [self tokenForString:tokenStr];
+            NSLog(@"==inseText:%@",insertionText);
+            [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:insertionText];
+        }
+    }
+}
+-(NSAttributedString*)tokenForString:(NSString*)aString{
+	LXTextAttachment * ta = [[LXTextAttachment alloc] initWithTitle:aString ];
+    
+    NSMutableAttributedString*  as = [[NSMutableAttributedString alloc] initWithAttributedString:[NSAttributedString attributedStringWithAttachment:ta]];
+    
+    ta.color = [NSColor yellowColor];
+    
+    [as addAttribute:NSAttachmentAttributeName value:ta range:NSMakeRange(0, [as length])];
+	[as addAttribute:NSBaselineOffsetAttributeName value:[NSNumber numberWithInt:0] range:NSMakeRange(0, [as length])];
+	[ta release];
+	
+	return [as autorelease];;
 }
 #pragma mark -
 #pragma mark NSView
