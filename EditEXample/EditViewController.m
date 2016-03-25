@@ -34,7 +34,7 @@
         [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutocompleteSuggestAutomatically];
         [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:NO] forKey:MGSFragariaPrefsAutocompleteIncludeStandardWords];
         
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsHighlightCurrentLine];
+        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:NO] forKey:MGSFragariaPrefsHighlightCurrentLine];
         [[NSUserDefaults standardUserDefaults]setObject:[NSArchiver archivedDataWithRootObject:[NSColor greenColor]] forKey:MGSFragariaPrefsHighlightLineColourWell];
         [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutoInsertAClosingBrace];
         [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutoInsertAClosingParenthesis];
@@ -51,7 +51,7 @@
         [self.fragaria embedInView:self.view];
         self.editController = [MGSFragariaPreferences sharedInstance].textEditingPrefsViewController;
         
-        NSString *path = @"/Users/xinliu/TestWA/New_Project16/RecordScript/今日头条_Android_12121724.py" ;
+        NSString *path = @"/Users/xinliu/Desktop/weibo_webView_iOS_10131546.py" ;
         NSString *str =  [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
         
         [self.fragaria setObject:@"python" forKey:MGSFOSyntaxDefinitionName];

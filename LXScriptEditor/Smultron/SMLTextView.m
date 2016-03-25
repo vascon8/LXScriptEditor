@@ -30,6 +30,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 @property (retain) NSColor *pageGuideColour;
 
+@property (nonatomic, copy) NSString *particalCompletionWord;
+
+@property (retain) NSMutableArray *tokenArr;
+
 @end
 
 @implementation SMLTextView
@@ -54,6 +58,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
         // set initial line wrapping
         lineWrap = YES;
         [self updateLineWrap];
+        
+        self.tokenArr = [NSMutableArray new];
 	}
 	return self;
 }
@@ -598,7 +604,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)setString:(NSString *)aString
 {
-    NSLog(@"===setstring=");
+//    NSLog(@"===setstring=");
 	[super setString:aString];
 	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
 }
@@ -1104,46 +1110,209 @@ Unless required by applicable law or agreed to in writing, software distributed 
 }
 - (void)insertCompletion:(NSString *)word forPartialWordRange:(NSRange)charRange movement:(NSInteger)movement isFinal:(BOOL)flag
 {
-    if (movement == NSReturnTextMovement || movement == NSTabTextMovement) {
-        [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
-        [self addToken:word];
+//    if (movement == NSReturnTextMovement || movement == NSTabTextMovement) {
+//        [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
+//        [self addToken:word];
+//    }
+    
+    NSEvent *event = [[self window] currentEvent];
+    BOOL didComplete = NO;
+    
+//    [[self completionTimer] invalidate];
+    
+//    NSLog(@"word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
+    
+    // 補完の元になる文字列を保存する
+    if (![self particalCompletionWord]) {
+        [self setParticalCompletionWord:[[self string] substringWithRange:charRange]];
+    }
+    
+    // 補完リストを表示中に通常のキー入力があったら、直後にもう一度入力補完を行うためのフラグを立てる
+    // （フラグは CEEditorViewController > textDidChange: で評価される）
+    if (flag && ([event type] == NSKeyDown) && !([event modifierFlags] & NSCommandKeyMask)) {
+        NSString *inputChar = [event charactersIgnoringModifiers];
+        unichar theUnichar = [inputChar characterAtIndex:0];
+        
+        if ([inputChar isEqualToString:[event characters]]) { //キーバインディングの入力などを除外
+            // アンダースコアが右矢印キーと判断されることの是正
+            if (([inputChar isEqualToString:@"_"]) && (movement == NSRightTextMovement)) {
+                movement = NSIllegalTextMovement;
+                flag = NO;
+            }
+            if ((movement == NSIllegalTextMovement) &&
+                (theUnichar < 0xF700) && (theUnichar != NSDeleteCharacter)) { // 通常のキー入力の判断
+//                [self setNeedsRecompletion:YES];
+            }
+        }
+    }
+    
+    if (flag) {
+        if ((movement == NSIllegalTextMovement) || (movement == NSRightTextMovement)) {  // キャンセル扱い
+            // 保存していた入力を復帰する（大文字／小文字が変更されている可能性があるため）
+            word = [self particalCompletionWord];
+        } else {
+            didComplete = YES;
+        }
+        
+        // 補完の元になる文字列をクリア
+        [self setParticalCompletionWord:nil];
+    }
+    
+    [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
+//       NSLog(@"after word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
+    if(didComplete) [self addToken:word charRange:charRange];
+    
+    if (didComplete) {
+        // 補完文字列に括弧が含まれていたら、括弧内だけを選択
+        NSRange rangeToSelect = [word rangeOfString:@"(?<=\\().*(?=\\))" options:NSRegularExpressionSearch];
+        if (rangeToSelect.location != NSNotFound) {
+            rangeToSelect.location += charRange.location;
+//            if(addtoken) rangeToSelect.length = 1;
+            NSLog(@"charR:%@,selectR:%@",NSStringFromRange(charRange),NSStringFromRange(rangeToSelect));
+            [self setSelectedRange:rangeToSelect];
+        }
     }
 }
 #pragma mark - token
-- (void)addToken:(NSString*)word
+- (void)addToken:(NSString*)word charRange:(NSRange)charRange
 {
     //<!#TokenStr#!>
     if ([word hasSuffix:@"#!>)"]) {
         NSRange tokenBRange = [word rangeOfString:@"(<!#"];
         if (tokenBRange.location!=NSNotFound) {
-            NSRange selectedRange = self.selectedRange;
+//            NSRange selectedRange = self.selectedRange;
             
             NSRange tokenStrRange = NSMakeRange(tokenBRange.location+1, word.length-tokenBRange.location-2);
             NSString *tokenStr = [word substringWithRange:tokenStrRange];
             
-            NSRange tokenEffecRange = NSMakeRange(selectedRange.location+tokenBRange.location-1, tokenStr.length);
+            NSRange tokenEffecRange = NSMakeRange(charRange.location+tokenBRange.location+1, tokenStr.length);
             
-            NSLog(@"selectRange:%@,tokenStrRange:%@,str:%@,tokenEffect:%@",NSStringFromRange(selectedRange),NSStringFromRange(tokenStrRange),tokenStr,NSStringFromRange(tokenEffecRange));
+//            NSLog(@"selectRange:%@,tokenStrRange:%@,str:%@,tokenEffect:%@",NSStringFromRange(selectedRange),NSStringFromRange(tokenStrRange),tokenStr,NSStringFromRange(tokenEffecRange));
             
-            NSAttributedString *insertionText = [self tokenForString:tokenStr];
-            NSLog(@"==inseText:%@",insertionText);
+            NSAttributedString *insertionText = [self tokenForString:tokenStr range:tokenEffecRange];
+//            NSLog(@"==inseText:%@",insertionText);
             [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:insertionText];
         }
     }
 }
--(NSAttributedString*)tokenForString:(NSString*)aString{
-	LXTextAttachment * ta = [[LXTextAttachment alloc] initWithTitle:aString ];
+-(NSAttributedString*)tokenForString:(NSString*)aString range:(NSRange)range
+{
     
-    NSMutableAttributedString*  as = [[NSMutableAttributedString alloc] initWithAttributedString:[NSAttributedString attributedStringWithAttachment:ta]];
-    
-    ta.color = [NSColor yellowColor];
-    
-    [as addAttribute:NSAttachmentAttributeName value:ta range:NSMakeRange(0, [as length])];
-	[as addAttribute:NSBaselineOffsetAttributeName value:[NSNumber numberWithInt:0] range:NSMakeRange(0, [as length])];
-	[ta release];
-	
-	return [as autorelease];;
+    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:aString font:self.textStorage.font];
+	return as;
 }
+/*
+- (void)textStorageWillProcessEditing:(NSNotification *)notification
+{
+    NSRange range = [self.textStorage editedRange];
+    //FLOG(@"     editRange is %lu, %lu", range.location, range.length);
+    
+    [self.textStorage enumerateAttributesInRange:range options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:
+     ^(NSDictionary *attributes, NSRange range, BOOL *stop) {
+         
+         // Iterate over each attribute and look for a Font Size
+         [attributes enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+             if ([[key description] isEqualToString:NSAttachmentAttributeName]) {
+                 //FLOG(@" attachment of class %@ found", [obj class]);
+                 
+                 NSTextAttachment *attachment = (NSTextAttachment *)obj;
+                 NSLog(@" attachment found");
+                 
+                 //Replace the default attachment cell with our own
+                 [self replaceAttachmentCell:attachment];
+             }
+             
+         }];
+     }];
+}
+- (void)replaceAttachmentCell:(NSTextAttachment*)attachment {
+    
+    // If its one we have already replaced then return
+    if ([attachment.attachmentCell isKindOfClass:[LXTextAttachmentCell class]]) {
+        //LOG(@" attachmentCell is already an OSTextAttachmentCell so do nothing");
+        return;
+    }
+    
+    //LOG(@" attachmentCell is NOT OSTextAttachmentCell so replace it");
+    
+    // Get the current attachment cell
+    NSTextAttachmentCell *cell = (NSTextAttachmentCell *)[attachment attachmentCell] ;
+    
+    // Get the image from it
+    NSImage * image = [cell image];
+    
+    // Create a new one with the image
+    LXTextAttachmentCell *newCell = [[LXTextAttachmentCell alloc] initImageCell:image];
+    
+    // Now replace the attachment cell
+    [attachment setAttachmentCell:newCell];
+    
+    return;
+}
+ */
+//- (void)keyDown:(NSEvent *)theEvent
+//{
+////    NSLog(@"range:%@",NSStringFromRange(self.selectedRange));
+//    
+//    unsigned short keyCode = [theEvent keyCode];
+//    if (keyCode == 48 && self.tokenArr.count>0) {
+//        NSRange selectedRange = self.selectedRange;
+//        
+//        LXTextAttachment *firstAt = self.tokenArr[0];
+//        if (self.tokenArr.count == 1) {
+//            [self setSelectedRange:NSMakeRange(firstAt.range.location, 1)];
+//        }
+//        else
+//        {
+//            NSRange minLocRange = firstAt.range;
+//            NSRange maxLocRange = firstAt.range;
+//            
+//            for (LXTextAttachment *at in self.tokenArr) {
+//                BOOL backFound = NO;
+//                if (at.range.location>selectedRange.location) {
+//                    backFound = YES;
+//                    if(at.range.location-selectedRange.location < minLocRange.location-selectedRange.location) minLocRange = at.range;
+//                }
+//                else if (at.range.location < selectedRange.location){
+//                    if(selectedRange.location-at.range.location > selectedRange.location-maxLocRange.location) maxLocRange = at.range;
+//                }
+//                
+//                if (backFound) [self setSelectedRange:NSMakeRange(minLocRange.location, 1)];
+//                else [self setSelectedRange:NSMakeRange(maxLocRange.location, 1)];
+//            }
+//        }
+//        
+//    }
+//    else
+//    {
+//        [super keyDown:theEvent];
+//    }
+//}
+
+//- (void)deleteBackward:(id)sender
+//{
+//    NSRange selectedRange = self.selectedRange;
+//    NSLog(@"==delete:%@,range:%@",sender,NSStringFromRange(selectedRange));
+//    
+//    NSArray *temp = [NSArray arrayWithArray:self.tokenArr];
+//    if (selectedRange.location!=NSNotFound) {
+//        if (selectedRange.length == 0 || selectedRange.length == 1) {
+//            for (LXTextAttachment *at in temp) {
+//                if(at.range.location == selectedRange.location) {[self.tokenArr removeObject:at];break;}
+//            }
+//        }
+//        else if(selectedRange.length > 0){
+//            for (LXTextAttachment *at in temp) {
+//                if (at.range.location==selectedRange.location || (at.range.location>selectedRange.location&&at.range.location<selectedRange.location+selectedRange.length)) {
+//                    [self.tokenArr removeObject:at];
+//                }
+//            }
+//        }
+//    }
+//    NSLog(@"==after delete tokenArr:%@",self.tokenArr);
+//    [super deleteBackward:sender];
+//}
+
 #pragma mark -
 #pragma mark NSView
 

@@ -8,390 +8,148 @@
 
 #import "LXTextAttachment.h"
 
+#import "SMLTextView.h"
+
+#define HorizonPadding 5.0f
+#define TokenInRectPadding 1.0f
+
 @implementation LXTextAttachment
-@synthesize representedObject,title;
-
--(id)initWithTitle:(NSString*)aTitle {
-    self = [self init];
-    if (self){
-        title = [aTitle copy];
-        LXTextAttachmentCell* tac = [[LXTextAttachmentCell alloc] init];
-        tac.tokenTitle = title;
-        [self setAttachmentCell: tac];
-        [tac release];
+- (id)initWithName:(NSString *)name font:(NSFont*)font
+{
+    NSFileWrapper *fw = [[NSFileWrapper alloc] init];
+    [fw setPreferredFilename:@"tokenattachment"];
+    self = [super initWithFileWrapper:fw];
+    if (self) {
+        LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font];
+        [self setAttachmentCell:aCell];
     }
+    
     return self;
+    
 }
 
-
-
--(id)description{
-    return [NSString stringWithFormat:@"<%@ %p Title: %@ | cell: %@>",[self class]  ,self, self.title,[self attachmentCell]];
-}
--(id)copyWithZone:(id)zone{
-    return nil;
-}
--(id)mutableCopy{
-    return nil;
-}
--(void)dealloc{
-    self.representedObject = nil;
-    self.title = nil;
-    [super dealloc];
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font
+{
+    LXTextAttachment *attachment = [[LXTextAttachment alloc] initWithName:name font:font];
+    return [NSAttributedString attributedStringWithAttachment:attachment];
 }
 @end
 
 
 @implementation LXTextAttachmentCell
-@synthesize tokenTitle;
-@synthesize selected;
+- (id)initTextCell:(NSString *)aString font:(NSFont*)font
+{
+    self = [super initTextCell:aString];
+    if (self) {
+        NSAttributedString *str = [[NSAttributedString alloc] initWithString:aString attributes:@{NSForegroundColorAttributeName: [NSColor blackColor],NSFontAttributeName:font}];
+        [self setAttributedStringValue:str];
+        [self setEditable:NO];
+    }
+    return self;
+}
 
--(void)dealloc{
-    self.tokenTitle = nil;
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+    [super drawWithFrame:cellFrame inView:controlView];
     
-    [super dealloc];
+    if (![controlView isKindOfClass:[NSTextView class]]) return;
+        
+    BOOL isSelected = [self isSelectedInRect:cellFrame ofView:controlView];
+    
+    NSColor *cellColor = [NSColor colorWithSRGBRed:228.0 / 255.0 green:235.0 / 255.0 blue:249.0 / 255.0 alpha:1.0];
+    
+    if (isSelected) {
+        cellColor = [NSColor colorWithSRGBRed:133.0 / 255.0 green:163.0 / 255.0 blue:239.0 / 255.0 alpha:1.0];
+    }
+    [cellColor set];
+
+    NSBezierPath *bp = [NSBezierPath bezierPath];
+    NSRect irect = NSInsetRect(cellFrame, TokenInRectPadding, TokenInRectPadding);
+    [bp appendBezierPathWithRoundedRect:NSMakeRect(irect.origin.x,
+                                                   irect.origin.y,
+                                                   irect.size.width,
+                                                   irect.size.height)
+                                xRadius:0.5 * irect.size.height
+                                yRadius:0.5 * irect.size.height];
+    
+    [bp fill];
+
+    [[NSColor colorWithSRGBRed:183.0 / 255.0 green:201.0 / 255.0 blue:239.0 / 255.0 alpha:1.0] set];
+    [bp setLineWidth:1.0];
+    [bp stroke];
+    
+    NSAttributedString *string = [self attributedStringValue];
+    NSMutableAttributedString *smallerString = [[NSMutableAttributedString alloc] initWithAttributedString:string];
+
+    NSTextView *tv = (NSTextView *) controlView;
+    NSFont *f = tv.textStorage.font;
+
+    [smallerString addAttribute:NSFontAttributeName
+                          value:f
+                          range:NSMakeRange(0, [string length])];
+    NSColor *textColor;
+
+    if (isSelected) {
+        textColor = [NSColor whiteColor];
+    } else {
+        textColor = [NSColor blackColor];
+    }
+    [smallerString addAttribute:NSForegroundColorAttributeName value:textColor range:NSMakeRange(0, string.length)];
+    NSSize strSize = [smallerString size];
+    NSMutableParagraphStyle *ps = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+    [ps setAlignment:NSCenterTextAlignment];
+    [smallerString addAttribute:NSParagraphStyleAttributeName value:ps range:NSMakeRange(0, [smallerString length])];
+//    NSLog(@"strS:%@,iR:%@,cellF:%@",NSStringFromSize(strSize),NSStringFromRect(irect),NSStringFromRect(cellFrame));
+    NSRect r = NSMakeRect(irect.origin.x + (irect.size.width - strSize.width) /2.0 ,
+                          irect.origin.y + (irect.size.height - strSize.height) ,
+                          strSize.width, strSize.height);
+//    [[NSColor blackColor] set];
+//    NSLog(@"rect:%@",NSStringFromRect(r));
+    [smallerString drawInRect:r];
 }
 
-
--(NSColor*)color{
-    NSColor * tokenColor = nil;
-    if ([self.attachment respondsToSelector:@selector(color)]){
-        tokenColor = [(LXTextAttachment*)self.attachment color];
-    }
-    if (!tokenColor) {
-        tokenColor = [NSColor colorWithCalibratedRed:0.851 green:0.906 blue:0.973 alpha:1.000];
-    }
-    return tokenColor;
+- (NSSize)cellSize
+{
+    NSAttributedString *str = [self attributedStringValue];
+    NSSize size = [str size];
+    NSSize cellS = NSMakeSize(2.0*HorizonPadding+2.0*TokenInRectPadding + 2.0*TokenInRectPadding +size.width,size.height);
+//    NSLog(@"cellS:%@,size:%@",NSStringFromSize(cellS),NSStringFromSize(size));
+    return cellS;
 }
-
-//-(MTTokenStyle)style{
-//    if ([self.attachment respondsToSelector:@selector(style)]){
-//        return [(_MTTokenTextAttachment*)self.attachment style];
-//    }
-//    else return kMTTokenStyleRounded;
-//    
-//}
-
 
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
-    superPoint.y -= 3.0;
+    superPoint.y -= 4.0;
     return superPoint;
 }
--(id)mutableCopyWithZone:(NSZone *)zone{
-    return [self retain];
-}
--(id)copyWithZone:(NSZone *)zone{
-    return [self retain];
-}
 
-/*
--(NSImage*)standardTokenImage{
-    static NSDictionary * _fontAttibutes = nil;
-    if (!_fontAttibutes) _fontAttibutes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSFont systemFontOfSize:11],NSFontAttributeName, nil];
-    
-    NSAttributedString * attributedString = [[[NSAttributedString alloc] initWithString:self.tokenTitle attributes:_fontAttibutes] autorelease];
-    if (!attributedString)  return nil;
-    CGFloat w = 19;
-    
-    NSSize imgSize =NSMakeSize([attributedString size].width+w+5, [attributedString size].height+0);
-    if (imgSize.width == 0 || imgSize.height == 0)
-        return nil;
-    
-    NSImage * image = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-    [image lockFocus];
-    
-    NSRect pathRect = NSMakeRect(2, 1, [attributedString size].width+w, [attributedString size].height-2);
-    CGFloat radius = 6;
-    NSBezierPath * path = [NSBezierPath bezierPath];
-    
-    CGFloat minimumX	= NSMinX(pathRect) - 0.5; // subtract half values to mitigate anti-aliasing
-    CGFloat maximumX	= NSMaxX(pathRect) - 0.25;
-    CGFloat minimumY	= NSMinY(pathRect) - 0.5;
-    CGFloat maximumY	= NSMaxY(pathRect) - 0.5;
-    CGFloat midY		= NSMidY(pathRect);
-    CGFloat midX		= NSMidX(pathRect);
-    
-    // bottom right curve and bottom edge
-    [path moveToPoint: NSMakePoint(midX, minimumY)];
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, minimumY) toPoint: NSMakePoint(maximumX, midY) radius: radius-.5];
-    
-    // top right curve and right edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, maximumY) toPoint: NSMakePoint(midX, maximumY) radius: radius-.5];
-    
-    // top left curve and top edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, maximumY) toPoint: NSMakePoint(minimumX, midY) radius: radius];
-    
-    // bottom left curve and left edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, minimumY) toPoint: NSMakePoint(midX, minimumY) radius: radius];
-    [path closePath];
-    
-    
-    
-    [path setLineWidth:1.0];
-    if (self.selected){
-        [[NSColor colorWithCalibratedRed:0.671 green:0.706 blue:0.773 alpha:1.000] set];
-    }
-    else {
-        [self.color set];
-    }
-    
-    [path fill];
-    [[NSColor colorWithCalibratedRed:.588 green:0.749 blue:0.929 alpha:1.000] set];
-    [path stroke];
-    [[NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:1.0]set];
-    
-    [attributedString drawInRect:NSMakeRect(11, 0, [attributedString size].width+10, [attributedString size].height)];
-    [image unlockFocus];
-    
-    return image;
-}
-
--(NSImage*)rectagularTokenImage{
-    static NSDictionary * _fontAttibutes = nil;
-    if (!_fontAttibutes) _fontAttibutes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSFont systemFontOfSize:11],NSFontAttributeName, nil];
-    
-    NSAttributedString * attributedString = [[[NSAttributedString alloc] initWithString:self.tokenTitle attributes:_fontAttibutes] autorelease];
-    if (!attributedString)  return nil;
-    NSSize imgSize =NSMakeSize([attributedString size].width+12, [attributedString size].height+0);
-    if (imgSize.width==0 || imgSize.height==0)
-        return nil;
-    
-    NSImage * image = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-    [image lockFocus];
-    
-    NSRect pathRect = NSMakeRect(2,0, [attributedString size].width+8, [attributedString size].height);
-    NSBezierPath * path = [NSBezierPath bezierPathWithRect: pathRect];
-    
-    if (self.selected){
-        [[NSColor colorWithCalibratedRed:0.671 green:0.706 blue:0.773 alpha:1.000] set];
-    }
-    else {
-        [[(LXTextAttachment*)self.attachment color] set];
-    }
-    
-    [path fill];
-    
-    [[NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:1.0]set];
-    
-    [attributedString drawInRect:NSMakeRect(6, 0, [attributedString size].width+3, [attributedString size].height)];
-    [image unlockFocus];
-    
-    return image;
-}
-
--(NSImage*)roundedColorTokenImage{
-    static NSDictionary * _fontAttibutes = nil;
-    CGFloat w = 19;
-    if (!_fontAttibutes) _fontAttibutes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSFont systemFontOfSize:11],NSFontAttributeName, nil];
-    
-    NSAttributedString * attributedString = [[[NSAttributedString alloc] initWithString:self.tokenTitle attributes:_fontAttibutes] autorelease];
-    if (!attributedString)  return nil;
-    NSSize imgSize =NSMakeSize([attributedString size].width+w+5, [attributedString size].height+0);
-    if (imgSize.width == 0 || imgSize.height == 0)
-        return nil;
-    
-    NSImage * image = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-    [image lockFocus];
-    CGFloat radius = 6;
-    
-    NSRect pathRect = NSMakeRect(2, 1, [attributedString size].width+w, [attributedString size].height-2);
-    
-    NSBezierPath * path = [NSBezierPath bezierPath];
-    
-    CGFloat minimumX	= NSMinX(pathRect) - 0.5; // subtract half values to mitigate anti-aliasing
-    CGFloat maximumX	= NSMaxX(pathRect) - 0.25;
-    CGFloat minimumY	= NSMinY(pathRect) - 0.5;
-    CGFloat maximumY	= NSMaxY(pathRect) - 0.5;
-    CGFloat midY		= NSMidY(pathRect);
-    CGFloat midX		= NSMidX(pathRect);
-    
-    // bottom right curve and bottom edge
-    [path moveToPoint: NSMakePoint(midX, minimumY)];
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, minimumY) toPoint: NSMakePoint(maximumX, midY) radius: radius-.5];
-    
-    // top right curve and right edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, maximumY) toPoint: NSMakePoint(midX, maximumY) radius: radius-.5];
-    
-    // top left curve and top edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, maximumY) toPoint: NSMakePoint(minimumX, midY) radius: radius];
-    
-    // bottom left curve and left edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, minimumY) toPoint: NSMakePoint(midX, minimumY) radius: radius];
-    [path closePath];
-    
-    
-    [path setLineWidth:1.0];
-    if (self.selected)
-        [[NSColor colorWithCalibratedRed:0.671 green:0.706 blue:0.773 alpha:1.000] set];
-    else {
-        [[NSColor colorWithCalibratedRed:0.851 green:0.906 blue:0.973 alpha:1.000] set];
-    }
-    
-    [path fill];
-    [[NSColor colorWithCalibratedRed:.588 green:0.749 blue:0.929 alpha:1.000] set];
-    [path stroke];
-    [[NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:1.0]set];
-    
-    CGFloat circleRadius = NSHeight(pathRect)-3;
-    NSRect circleRect = NSMakeRect(NSMinX(pathRect)+1.5 ,NSMinY(pathRect)+1,circleRadius,circleRadius);
-    NSBezierPath * colorSwatchPath =[NSBezierPath bezierPathWithOvalInRect:circleRect];
-    NSColor * theColor = self.color;
-    if (!theColor) theColor = [NSColor whiteColor];
-    [self.color set];
-    [colorSwatchPath fill];
-    [[theColor darkShade] set];
-    [colorSwatchPath stroke];
-    
-    [attributedString drawInRect:NSMakeRect(17, 0, [attributedString size].width+10, [attributedString size].height)];
-    [image unlockFocus];
-    
-    return image;
-}
-
--(NSImage*)roundedLeftSideColorTokenImage{
-    static NSDictionary * _fontAttibutes = nil;
-    CGFloat w = 19;
-    if (!_fontAttibutes) _fontAttibutes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSFont systemFontOfSize:11],NSFontAttributeName, nil];
-    
-    NSAttributedString * attributedString = [[[NSAttributedString alloc] initWithString:self.tokenTitle attributes:_fontAttibutes] autorelease];
-    if (!attributedString)  return nil;
-    NSSize imgSize =NSMakeSize([attributedString size].width+w+5, [attributedString size].height+0);
-    if (imgSize.width == 0 || imgSize.height == 0)
-        return nil;
-    
-    NSImage * image = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-    [image lockFocus];
-    CGFloat radius = 6;
-    
-    NSRect pathRect = NSMakeRect(2, 1, [attributedString size].width+w, [attributedString size].height-2);
-    
-    NSBezierPath * path = [NSBezierPath bezierPath];
-    
-    CGFloat minimumX	= NSMinX(pathRect) - 0.5; // subtract half values to mitigate anti-aliasing
-    CGFloat maximumX	= NSMaxX(pathRect) - 0.25;
-    CGFloat minimumY	= NSMinY(pathRect) - 0.5;
-    CGFloat maximumY	= NSMaxY(pathRect) - 0.5;
-    CGFloat midY		= NSMidY(pathRect);
-    CGFloat midX		= NSMidX(pathRect);
-    
-    // bottom right curve and bottom edge
-    [path moveToPoint: NSMakePoint(midX, minimumY)];
-    [path lineToPoint:NSMakePoint(maximumX, minimumY)];
-    
-    // top right curve and right edge
-    [path lineToPoint:NSMakePoint(maximumX, maximumY)];
-    
-    // top left curve and top edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, maximumY) toPoint: NSMakePoint(minimumX, midY) radius: radius];
-    
-    // bottom left curve and left edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, minimumY) toPoint: NSMakePoint(midX, minimumY) radius: radius];
-    [path closePath];
-    
-    
-    [path setLineWidth:1.0];
-    if (self.selected)
-        [[NSColor colorWithCalibratedRed:0.671 green:0.706 blue:0.773 alpha:1.000] set];
-    else {
-        [[NSColor colorWithCalibratedRed:0.851 green:0.906 blue:0.973 alpha:1.000] set];
-    }
-    
-    [path fill];
-    [[NSColor colorWithCalibratedRed:.588 green:0.749 blue:0.929 alpha:1.000] set];
-    [path stroke];
-    [[NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:1.0]set];
-    
-    CGFloat circleRadius = NSHeight(pathRect)-3;
-    NSRect circleRect = NSMakeRect(NSMinX(pathRect)+1.5 ,NSMinY(pathRect)+1,circleRadius,circleRadius);
-    NSBezierPath * colorSwatchPath =[NSBezierPath bezierPathWithOvalInRect:circleRect];
-    NSColor * theColor = self.color;
-    if (!theColor) theColor = [NSColor whiteColor];
-    [self.color set];
-    [colorSwatchPath fill];
-    [[theColor darkShade] set];
-    [colorSwatchPath stroke];
-    
-    [attributedString drawInRect:NSMakeRect(17, 0, [attributedString size].width+10, [attributedString size].height)];
-    [image unlockFocus];
-    
-    return image;
-}
-
-*/
-
-//-(NSImage *) image{
-//    switch ([self style]) {
-//        case kMTTokenStyleRectangular:
-//            return [self rectagularTokenImage];
-//        case kMTTokenStyleRoundedColor:
-//            return [self roundedColorTokenImage];
-//        case kMTTokenStyleRoundedLeftSideColor:
-//            return [self roundedLeftSideColorTokenImage];
-//        default:
-//            return [self standardTokenImage];
-//    }
-//    
-//}
-- (NSImage *)image
+- (BOOL)trackMouse:(NSEvent *)theEvent inRect:(NSRect)cellFrame ofView:(NSView *)controlView atCharacterIndex:(NSUInteger)charIndex untilMouseUp:(BOOL)flag
 {
-    static NSDictionary * _fontAttibutes = nil;
-    if (!_fontAttibutes) _fontAttibutes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSFont systemFontOfSize:11],NSFontAttributeName, nil];
-    
-    NSAttributedString * attributedString = [[[NSAttributedString alloc] initWithString:self.tokenTitle attributes:_fontAttibutes] autorelease];
-    if (!attributedString)  return nil;
-    CGFloat w = 19;
-    
-    NSSize imgSize =NSMakeSize([attributedString size].width+w+5, [attributedString size].height+0);
-    if (imgSize.width == 0 || imgSize.height == 0)
-        return nil;
-    
-    NSImage * image = [[[NSImage alloc] initWithSize:imgSize] autorelease];
-    [image lockFocus];
-    
-    NSRect pathRect = NSMakeRect(2, 1, [attributedString size].width+w, [attributedString size].height-2);
-    CGFloat radius = 6;
-    NSBezierPath * path = [NSBezierPath bezierPath];
-    
-    CGFloat minimumX	= NSMinX(pathRect) - 0.5; // subtract half values to mitigate anti-aliasing
-    CGFloat maximumX	= NSMaxX(pathRect) - 0.25;
-    CGFloat minimumY	= NSMinY(pathRect) - 0.5;
-    CGFloat maximumY	= NSMaxY(pathRect) - 0.5;
-    CGFloat midY		= NSMidY(pathRect);
-    CGFloat midX		= NSMidX(pathRect);
-    
-    // bottom right curve and bottom edge
-    [path moveToPoint: NSMakePoint(midX, minimumY)];
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, minimumY) toPoint: NSMakePoint(maximumX, midY) radius: radius-.5];
-    
-    // top right curve and right edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(maximumX, maximumY) toPoint: NSMakePoint(midX, maximumY) radius: radius-.5];
-    
-    // top left curve and top edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, maximumY) toPoint: NSMakePoint(minimumX, midY) radius: radius];
-    
-    // bottom left curve and left edge
-    [path appendBezierPathWithArcFromPoint: NSMakePoint(minimumX, minimumY) toPoint: NSMakePoint(midX, minimumY) radius: radius];
-    [path closePath];
-    
-    
-    
-    [path setLineWidth:1.0];
-    if (self.selected){
-        [[NSColor colorWithCalibratedRed:0.671 green:0.706 blue:0.773 alpha:1.000] set];
-    }
-    else {
-        [self.color set];
+    if ([controlView isKindOfClass:[NSTextView class]]) {
+        NSTextView *tv = (NSTextView *) controlView;
+        [tv setSelectedRange:NSMakeRange(charIndex, 1)];
     }
     
-    [path fill];
-    [[NSColor colorWithCalibratedRed:.588 green:0.749 blue:0.929 alpha:1.000] set];
-    [path stroke];
-    [[NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:1.0]set];
-    
-    [attributedString drawInRect:NSMakeRect(11, 0, [attributedString size].width+10, [attributedString size].height)];
-    [image unlockFocus];
-    return image;
+    return [super trackMouse:theEvent inRect:cellFrame ofView:controlView atCharacterIndex:charIndex untilMouseUp:flag];
 }
+
+- (BOOL)isSelectedInRect:(NSRect)cellFrame ofView:(NSView *)controlView
+{
+    if ([controlView isKindOfClass:[NSTextView class]]) {
+        NSTextView *tv = (NSTextView *) controlView;
+        NSArray *ranges = [tv selectedRanges];
+        for (id rangeObject in ranges) {
+            NSRange range = [rangeObject rangeValue];
+            NSRange glyphRange = [tv.layoutManager glyphRangeForCharacterRange:range actualCharacterRange:NULL];
+            NSRect glyphRect = [tv.layoutManager boundingRectForGlyphRange:glyphRange inTextContainer:tv.textContainer];
+            if (NSPointInRect(cellFrame.origin, glyphRect)) {
+                return YES;
+            }
+        }
+        
+    }
+    return NO;
+}
+
 
 @end

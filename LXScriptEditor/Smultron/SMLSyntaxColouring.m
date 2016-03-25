@@ -2046,6 +2046,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 - (void)textViewDidChangeSelection:(NSNotification *)aNotification
 {
 //    NSLog(@"====changeselection:%@",aNotification);
+    
 	// send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:aNotification];
 
@@ -2063,6 +2064,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	SMLTextView *textView = [aNotification object];
 		
 	NSRange editedRange = [textView selectedRange];
+//    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);
 	
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsHighlightCurrentLine] boolValue] == YES) {
 		[self highlightLineRange:[completeString lineRangeForRange:editedRange]];

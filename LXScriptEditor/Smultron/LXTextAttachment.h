@@ -9,21 +9,11 @@
 #import <Cocoa/Cocoa.h>
 
 @interface LXTextAttachment : NSTextAttachment
-
-@property (retain) id representedObject;
-@property (copy) NSString * title;
-@property (retain) NSColor * color;
-//@property (assign) MTTokenStyle  style;
-
--(id)initWithTitle:(NSString*)aTitle;
-
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont*)font;
 @end
 
 
 
 @interface LXTextAttachmentCell :NSTextAttachmentCell
-
-@property (retain) NSString *tokenTitle;
-@property (assign) BOOL selected;
-
+- (id)initTextCell:(NSString *)aString font:(NSFont*)font;
 @end
