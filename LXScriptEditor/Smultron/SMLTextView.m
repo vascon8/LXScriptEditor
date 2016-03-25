@@ -25,14 +25,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "LXTextAttachment.h"
 
 // class extension
-@interface SMLTextView()
+@interface SMLTextView()<NSTextViewDelegate>
 - (void)windowDidBecomeMainOrKey:(NSNotification *)note;
 
 @property (retain) NSColor *pageGuideColour;
 
 @property (nonatomic, copy) NSString *particalCompletionWord;
-
-@property (retain) NSMutableArray *tokenArr;
 
 @end
 
@@ -54,16 +52,31 @@ Unless required by applicable law or agreed to in writing, software distributed 
 		[[self textContainer] replaceLayoutManager:layoutManager];
 		
 		[self setDefaults];
+        self.delegate = self;
         
         // set initial line wrapping
         lineWrap = YES;
         [self updateLineWrap];
-        
-        self.tokenArr = [NSMutableArray new];
 	}
 	return self;
 }
-
+//#pragma mark - LXTextAttachmentCell delegate
+//NSString *LXMarkupPboardType = @"com.xinliuTemplateMarkup";
+//
+//- (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
+//    return [NSArray arrayWithObject:LXMarkupPboardType];
+//}
+//
+//- (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
+//    if (type == LXMarkupPboardType) {
+//		LXTextAttachment *attachment = ((LXTextAttachmentCell *)cell).attachment;
+//        
+//		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
+//        [pboard writeObjects:[NSArray arrayWithObject:s]];
+//    }
+//    
+//    return YES;
+//}
 
 #pragma mark -
 #pragma mark Accessors
@@ -1160,21 +1173,22 @@ Unless required by applicable law or agreed to in writing, software distributed 
     
     [super insertCompletion:word forPartialWordRange:charRange movement:movement isFinal:flag];
 //       NSLog(@"after word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
-    if(didComplete) [self addToken:word charRange:charRange];
+    BOOL isAddToken = NO;
+    if(didComplete) isAddToken = [self addToken:word charRange:charRange];
     
     if (didComplete) {
         // 補完文字列に括弧が含まれていたら、括弧内だけを選択
         NSRange rangeToSelect = [word rangeOfString:@"(?<=\\().*(?=\\))" options:NSRegularExpressionSearch];
         if (rangeToSelect.location != NSNotFound) {
             rangeToSelect.location += charRange.location;
-//            if(addtoken) rangeToSelect.length = 1;
+            if(isAddToken) rangeToSelect.length = 1;
             NSLog(@"charR:%@,selectR:%@",NSStringFromRange(charRange),NSStringFromRange(rangeToSelect));
             [self setSelectedRange:rangeToSelect];
         }
     }
 }
 #pragma mark - token
-- (void)addToken:(NSString*)word charRange:(NSRange)charRange
+- (BOOL)addToken:(NSString*)word charRange:(NSRange)charRange
 {
     //<!#TokenStr#!>
     if ([word hasSuffix:@"#!>)"]) {
@@ -1192,8 +1206,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
             NSAttributedString *insertionText = [self tokenForString:tokenStr range:tokenEffecRange];
 //            NSLog(@"==inseText:%@",insertionText);
             [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:insertionText];
+            return YES;
         }
     }
+    return NO;
 }
 -(NSAttributedString*)tokenForString:(NSString*)aString range:(NSRange)range
 {
@@ -1250,44 +1266,35 @@ Unless required by applicable law or agreed to in writing, software distributed 
     return;
 }
  */
-//- (void)keyDown:(NSEvent *)theEvent
-//{
-////    NSLog(@"range:%@",NSStringFromRange(self.selectedRange));
-//    
-//    unsigned short keyCode = [theEvent keyCode];
-//    if (keyCode == 48 && self.tokenArr.count>0) {
-//        NSRange selectedRange = self.selectedRange;
-//        
-//        LXTextAttachment *firstAt = self.tokenArr[0];
-//        if (self.tokenArr.count == 1) {
-//            [self setSelectedRange:NSMakeRange(firstAt.range.location, 1)];
-//        }
-//        else
-//        {
-//            NSRange minLocRange = firstAt.range;
-//            NSRange maxLocRange = firstAt.range;
-//            
-//            for (LXTextAttachment *at in self.tokenArr) {
-//                BOOL backFound = NO;
-//                if (at.range.location>selectedRange.location) {
-//                    backFound = YES;
-//                    if(at.range.location-selectedRange.location < minLocRange.location-selectedRange.location) minLocRange = at.range;
-//                }
-//                else if (at.range.location < selectedRange.location){
-//                    if(selectedRange.location-at.range.location > selectedRange.location-maxLocRange.location) maxLocRange = at.range;
-//                }
-//                
-//                if (backFound) [self setSelectedRange:NSMakeRange(minLocRange.location, 1)];
-//                else [self setSelectedRange:NSMakeRange(maxLocRange.location, 1)];
-//            }
-//        }
-//        
-//    }
-//    else
-//    {
-//        [super keyDown:theEvent];
-//    }
-//}
+- (void)keyDown:(NSEvent *)theEvent
+{
+//    NSLog(@"range:%@",NSStringFromRange(self.selectedRange));
+    
+    unsigned short keyCode = [theEvent keyCode];
+    if (keyCode == 48) {
+        
+        NSTextStorage *storage = self.textStorage;
+        NSRange scanRange = self.selectedRange;
+        
+        if (scanRange.location + scanRange.length < storage.string.length-1) {
+            scanRange.location += 1;
+            scanRange.length = storage.length - scanRange.location;
+            
+            [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
+                if (value) {
+                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
+                    [self setSelectedRange:range];
+                    *stop = YES;
+                }
+            }];
+        }
+
+    }
+    else
+    {
+        [super keyDown:theEvent];
+    }
+}
 
 //- (void)deleteBackward:(id)sender
 //{

@@ -16,4 +16,5 @@
 
 @interface LXTextAttachmentCell :NSTextAttachmentCell
 - (id)initTextCell:(NSString *)aString font:(NSFont*)font;
+@property (retain) NSAttributedString *attStr;
 @end

@@ -17,7 +17,7 @@
 - (id)initWithName:(NSString *)name font:(NSFont*)font
 {
     NSFileWrapper *fw = [[NSFileWrapper alloc] init];
-    [fw setPreferredFilename:@"tokenattachment"];
+    [fw setPreferredFilename:@"lxtokenattachment"];
     self = [super initWithFileWrapper:fw];
     if (self) {
         LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font];

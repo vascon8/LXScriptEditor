@@ -22,6 +22,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "MGSFragariaFramework.h"
 
 #import "LanguageTool.h"
+#import "LXTextAttachment.h"
 
 // syntax colouring information dictionary keys
 NSString *SMLSyntaxGroup = @"group";
@@ -2166,7 +2167,43 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 #pragma unused(aTextView)
 	return undoManager;
 }
+#pragma mark - LXTextAttachmentCell delegate
+NSString *LXMarkupPboardType = @"com.xinliuTemplateMarkup";
 
+- (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
+    return [NSArray arrayWithObject:LXMarkupPboardType];
+}
+
+- (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
+    if (type == LXMarkupPboardType) {
+		LXTextAttachment *attachment = ((LXTextAttachmentCell *)cell).attachment;
+        
+		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
+        [pboard writeObjects:[NSArray arrayWithObject:s]];
+    }
+    
+    return YES;
+}
+NSTextStorageWillProcessEditingNotification object:self.textStorage queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+    if (note.object == self.textStorage && (self.textStorage.editedMask & NSTextStorageEditedCharacters) == NSTextStorageEditedCharacters) {
+        NSRange editedRange = self.textStorage.editedRange;
+        
+        [self.textStorage enumerateAttribute:NSAttachmentAttributeName inRange:self.textStorage.editedRange options:NSAttributedStringEnumerationReverse|NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
+            //		NSAttributedString *b = [s attributedSubstringFromRange:range];
+            if (value != nil) {
+                NSTextAttachment *attachment = value;
+                //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
+                //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
+                
+                TFTextElementAttachmentCell *cell = [[TFTextElementAttachmentCell alloc] init];
+                cell.element = attachment.fileWrapper.preferredFilename;
+                [attachment setAttachmentCell:cell];
+                
+                [self.textStorage replaceCharactersInRange:range withAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+            }
+        }];
+        
+        [self.textStorage replaceTokensInRange:editedRange];
 #pragma mark -
 #pragma mark MGSFragariaTextViewDelegate
 
