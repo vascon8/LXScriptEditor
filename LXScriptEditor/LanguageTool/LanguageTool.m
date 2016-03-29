@@ -58,44 +58,59 @@
         for (NSString *path in arrM) {
             //judge time
             
-            //unzip
-            NSDateFormatter *formatter = [NSDateFormatter new];
-            [formatter setDateFormat:@"yyMMddHHssSSSS"];
-            [formatter setLocale:[NSLocale systemLocale]];
-            [formatter setTimeZone:[NSTimeZone systemTimeZone]];
-            NSString *timeStr = [formatter stringFromDate:[NSDate date]];
+            BOOL eggDir = NO;
+            BOOL needUnzip = [[NSFileManager defaultManager]fileExistsAtPath:path isDirectory:&eggDir];
             
             NSString *eggName = [path lastPathComponent];
-            eggName = [NSString stringWithFormat:@"%@_%@",timeStr,eggName];
-            NSString *tmpPath = [NSString stringWithFormat:@"/tmp/%@",eggName];
-            NSString *command = [NSString stringWithFormat:@"unzip -d %@ %@",tmpPath,path];
-            [self runTaskInUserShellWithCommand:command];
+            NSString *tmpPath = path;
+            if (!eggDir) {
+                //unzip
+                NSDateFormatter *formatter = [NSDateFormatter new];
+                [formatter setDateFormat:@"yyMMddHHssSSSS"];
+                [formatter setLocale:[NSLocale systemLocale]];
+                [formatter setTimeZone:[NSTimeZone systemTimeZone]];
+                NSString *timeStr = [formatter stringFromDate:[NSDate date]];
+                
+                eggName = [NSString stringWithFormat:@"%@_%@",timeStr,eggName];
+                tmpPath = [NSString stringWithFormat:@"/tmp/%@",eggName];
+                NSString *command = [NSString stringWithFormat:@"unzip -d %@ %@",tmpPath,path];
+                
+                [self runTaskInUserShellWithCommand:command];
+            }
             
-            BOOL isDir;
-            if([[NSFileManager defaultManager]fileExistsAtPath:tmpPath isDirectory:&isDir]){
-//                NSLog(@"=unzip successful:%@",tmpPath);
-                if (isDir) {
-                    
-                    NSError *error=nil;
-                    NSArray *contsArr = [[NSFileManager defaultManager]contentsOfDirectoryAtPath:tmpPath error:&error];
-                    if (!error && contsArr) {
-                        for (NSString *dirName in contsArr) {
-                            NSRange range = [[eggName lowercaseString] rangeOfString:[dirName lowercaseString]];
-                            if (range.location!=NSNotFound) {
-                                NSString *libPrefix = [NSString stringWithFormat:@"from %@",dirName];
-                                if(![keywordArr containsObject:libPrefix]) [keywordArr addObject:libPrefix];
-                                
-                                NSString *libPath = [tmpPath stringByAppendingPathComponent:dirName];
-//                                NSLog(@"libPath:%@",libPath);
-                                [keywordArr addObjectsFromArray:[self enuLibPath:libPath prefix:libPrefix]];
-                            }
-                        }
+            [keywordArr addObjectsFromArray:[self scanEggPath:tmpPath name:eggName]];
+
+        }
+    }
+//    NSLog(@"key:%@",keywordArr);
+    return keywordArr;
+}
++ (NSArray*)scanEggPath:(NSString*)tmpPath name:(NSString*)eggName
+{
+    NSMutableArray *keywordArr = [NSMutableArray array];
+    
+    BOOL isDir;
+    if([[NSFileManager defaultManager]fileExistsAtPath:tmpPath isDirectory:&isDir]){
+        //                NSLog(@"=unzip successful:%@",tmpPath);
+        if (isDir) {
+            
+            NSError *error=nil;
+            NSArray *contsArr = [[NSFileManager defaultManager]contentsOfDirectoryAtPath:tmpPath error:&error];
+            if (!error && contsArr) {
+                for (NSString *dirName in contsArr) {
+                    NSRange range = [[eggName lowercaseString] rangeOfString:[dirName lowercaseString]];
+                    if (range.location!=NSNotFound) {
+                        NSString *libPrefix = [NSString stringWithFormat:@"from %@",dirName];
+                        if(![keywordArr containsObject:libPrefix]) [keywordArr addObject:libPrefix];
+                        
+                        NSString *libPath = [tmpPath stringByAppendingPathComponent:dirName];
+                        //                                NSLog(@"libPath:%@",libPath);
+                        [keywordArr addObjectsFromArray:[self enuLibPath:libPath prefix:libPrefix]];
                     }
                 }
             }
         }
     }
-    NSLog(@"key:%@",keywordArr);
     return keywordArr;
 }
 + (NSArray*)enuLibPath:(NSString*)libPath prefix:(NSString*)prefix
@@ -141,7 +156,7 @@
     NSMutableArray *arrM = [NSMutableArray new];
     NSString *defCommand = @"ls *.py|grep -v __*.py|xargs egrep \"^ {0,}def \"|grep -v \"def _\"";
     NSString *defOutput = [self runTaskInUserShellWithCommand:defCommand currentPath:dir];
-//    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
+    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
     [arrM addObjectsFromArray:[self analyDefOutput:defOutput prefix:nil]];
     
     NSString *classCommand = @"ls *.py|grep -v __*.py|xargs egrep -H \"^ {0,}class \"|grep -v \"class _\"";

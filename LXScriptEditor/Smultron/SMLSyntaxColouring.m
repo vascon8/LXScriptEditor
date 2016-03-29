@@ -2167,6 +2167,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 #pragma unused(aTextView)
 	return undoManager;
 }
+/*
 #pragma mark - LXTextAttachmentCell delegate
 NSString *LXMarkupPboardType = @"com.xinliuTemplateMarkup";
 
@@ -2204,6 +2205,8 @@ NSTextStorageWillProcessEditingNotification object:self.textStorage queue:[NSOpe
         }];
         
         [self.textStorage replaceTokensInRange:editedRange];
+ */
+
 #pragma mark -
 #pragma mark MGSFragariaTextViewDelegate
 

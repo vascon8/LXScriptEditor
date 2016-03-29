@@ -1150,7 +1150,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
             // アンダースコアが右矢印キーと判断されることの是正
             if (([inputChar isEqualToString:@"_"]) && (movement == NSRightTextMovement)) {
                 movement = NSIllegalTextMovement;
-                flag = NO;
+//                flag = NO;
             }
             if ((movement == NSIllegalTextMovement) &&
                 (theUnichar < 0xF700) && (theUnichar != NSDeleteCharacter)) { // 通常のキー入力の判断
