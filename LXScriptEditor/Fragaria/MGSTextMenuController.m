@@ -253,7 +253,7 @@ static id sharedInstance = nil;
 -(void)performUndoChangeEncoding:(id)sender
 {
 	id document = SMLCurrentDocument;
-	
+
 	[[[document valueForKey:ro_MGSFOSyntaxColouring] undoManager] registerUndoWithTarget:self selector:@selector(performUndoChangeEncoding:) object:[NSArray arrayWithObject:[document valueForKey:@"encoding"]]];
 	[[[document valueForKey:ro_MGSFOSyntaxColouring] undoManager] setActionName:NAME_FOR_UNDO_CHANGE_ENCODING];
 	

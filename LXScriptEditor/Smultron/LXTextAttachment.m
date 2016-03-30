@@ -16,9 +16,9 @@
 @implementation LXTextAttachment
 - (id)initWithName:(NSString *)name font:(NSFont*)font
 {
-    NSFileWrapper *fw = [[NSFileWrapper alloc] init];
-    [fw setPreferredFilename:@"lxtokenattachment"];
-    self = [super initWithFileWrapper:fw];
+//    NSFileWrapper *fw = [[NSFileWrapper alloc] init];
+//    [fw setPreferredFilename:@"lxtokenattachment"];
+    self = [super init];
     if (self) {
         LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font];
         [self setAttachmentCell:aCell];
@@ -150,6 +150,5 @@
     }
     return NO;
 }
-
 
 @end

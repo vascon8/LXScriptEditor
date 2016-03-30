@@ -25,7 +25,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "LXTextAttachment.h"
 
 // class extension
-@interface SMLTextView()<NSTextViewDelegate>
+@interface SMLTextView()
 - (void)windowDidBecomeMainOrKey:(NSNotification *)note;
 
 @property (retain) NSColor *pageGuideColour;
@@ -52,7 +52,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 		[[self textContainer] replaceLayoutManager:layoutManager];
 		
 		[self setDefaults];
-        self.delegate = self;
         
         // set initial line wrapping
         lineWrap = YES;
@@ -643,7 +642,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
     BOOL textViewWasEmpty = ([self.textStorage length] == 0 ? YES : NO);
 
 	if ([self isEditable] && undo) {
-        
+
         // this sequence will be registered with the undo manager
 		if ([self shouldChangeTextInRange:range replacementString:text]) {
             
@@ -696,7 +695,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 	BOOL undo = [[options objectForKey:@"undo"] boolValue];
 
     NSTextStorage *textStorage = [self textStorage];
-
+    NSLog(@"==setattr undo");
 	if ([self isEditable] && undo) {
 		
         /*
@@ -1197,9 +1196,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
     NSRange fR = [word rangeOfString:@")" options:NSBackwardsSearch];
 //    NSLog(@"==br:%@,fr:%@",NSStringFromRange(bR),NSStringFromRange(fR));
     if (bR.location != NSNotFound && fR.location != NSNotFound && bR.location+bR.length<fR.location) {
-        NSString *subStr = [word substringWithRange:NSMakeRange(bR.location+1, fR.location-bR.location-1)];
+        NSUInteger subLoc = bR.location+1;
+        NSString *subStr = [word substringWithRange:NSMakeRange(subLoc, fR.location-bR.location-1)];
 //        NSLog(@"=substr:%@",subStr);
-        
         if (subStr.length>0)
         {
             NSArray *comps = [subStr componentsSeparatedByString:@","];
@@ -1214,9 +1213,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
                     }
                     NSString *finalStr = [compStr substringFromIndex:i];
                     
-                    NSRange compRange = [word rangeOfString:finalStr];
+                    NSRange compRange = [subStr rangeOfString:finalStr];
                     if(compRange.location==NSNotFound) continue;
-                    NSRange tokenEffecRange = NSMakeRange(charRange.location+compRange.location, finalStr.length);
+                    NSRange tokenEffecRange = NSMakeRange(charRange.location+compRange.location+subLoc, finalStr.length);
 //                    NSLog(@"==finalstr:%@,compR:%@,tokenR:%@",finalStr,NSStringFromRange(compRange),NSStringFromRange(tokenEffecRange));
                     NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font];
                     

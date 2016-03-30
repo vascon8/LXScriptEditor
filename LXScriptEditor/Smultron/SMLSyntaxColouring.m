@@ -2170,17 +2170,18 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 #pragma unused(aTextView)
 	return undoManager;
 }
-/*
+
 #pragma mark - LXTextAttachmentCell delegate
-NSString *LXMarkupPboardType = @"com.xinliuTemplateMarkup";
+NSString *LXMarkupPboardType = @"com.xinliu.TemplateMarkup";
 
 - (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
-    return [NSArray arrayWithObject:LXMarkupPboardType];
+    return [NSArray arrayWithObjects:LXMarkupPboardType,NSPasteboardTypeString, nil];
 }
 
 - (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
     if (type == LXMarkupPboardType) {
-		LXTextAttachment *attachment = ((LXTextAttachmentCell *)cell).attachment;
+		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
+        [attachment setAttachmentCell:cell];
         
 		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
         [pboard writeObjects:[NSArray arrayWithObject:s]];
@@ -2188,27 +2189,27 @@ NSString *LXMarkupPboardType = @"com.xinliuTemplateMarkup";
     
     return YES;
 }
-NSTextStorageWillProcessEditingNotification object:self.textStorage queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-    if (note.object == self.textStorage && (self.textStorage.editedMask & NSTextStorageEditedCharacters) == NSTextStorageEditedCharacters) {
-        NSRange editedRange = self.textStorage.editedRange;
+- (void)textStorageWillProcessEditing:(NSNotification *)notification
+{
+    NSTextStorage *storage = notification.object;
+    
+    if ((storage.editedMask & NSTextStorageEditedCharacters) == NSTextStorageEditedCharacters) {
+        NSRange editedRange = storage.editedRange;
         
-        [self.textStorage enumerateAttribute:NSAttachmentAttributeName inRange:self.textStorage.editedRange options:NSAttributedStringEnumerationReverse|NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-            //		NSAttributedString *b = [s attributedSubstringFromRange:range];
+        [storage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
+            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
             if (value != nil) {
                 NSTextAttachment *attachment = value;
+                NSLog(@"==attCell:%@",attachment.attachmentCell);
                 //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
                 //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
-                
-                TFTextElementAttachmentCell *cell = [[TFTextElementAttachmentCell alloc] init];
-                cell.element = attachment.fileWrapper.preferredFilename;
-                [attachment setAttachmentCell:cell];
-                
-                [self.textStorage replaceCharactersInRange:range withAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+                [storage beginEditing];
+                [storage replaceCharactersInRange:range withAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+                [storage endEditing];
             }
         }];
-        
-        [self.textStorage replaceTokensInRange:editedRange];
- */
+    }
+}
 
 #pragma mark -
 #pragma mark MGSFragariaTextViewDelegate
