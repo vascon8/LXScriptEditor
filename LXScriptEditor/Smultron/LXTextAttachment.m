@@ -69,8 +69,8 @@
                                                    irect.origin.y,
                                                    irect.size.width,
                                                    irect.size.height)
-                                xRadius:0.3 * irect.size.height
-                                yRadius:0.3 * irect.size.height];
+                                xRadius:0.2 * irect.size.height
+                                yRadius:0.2 * irect.size.height];
     
     [bp fill];
 

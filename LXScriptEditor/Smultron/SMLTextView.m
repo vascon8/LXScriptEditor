@@ -1191,6 +1191,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 - (BOOL)addToken:(NSString*)word charRange:(NSRange)charRange
 {
     if(charRange.location == NSNotFound) return NO;
+    if(![[[fragaria.docSpec valueForKey:MGSFOSyntaxDefinitionName] lowercaseString] isEqualToString:@"python"]) return NO;
     
     NSRange bR = [word rangeOfString:@"("];
     NSRange fR = [word rangeOfString:@")" options:NSBackwardsSearch];
@@ -1328,7 +1329,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
             
             [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
                 if (value) {
-                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
+//                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
                     fond = YES;
                     *stop = YES;
@@ -1342,7 +1343,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
             
             [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanR	 options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
                 if (value) {
-                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
+//                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
                     fond = YES;
                     *stop = YES;

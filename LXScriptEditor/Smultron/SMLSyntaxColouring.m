@@ -298,7 +298,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 - (void)applySyntaxDefinition
 {			
 	// parse
-	[self parseSyntaxDictionary:self.syntaxDictionary];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self parseSyntaxDictionary:self.syntaxDictionary];
+    });
+
 }
 
 /*
@@ -2278,12 +2281,6 @@ NSTextStorageWillProcessEditingNotification object:self.textStorage queue:[NSOpe
 		[autocompleteWordsTimer invalidate];
 		autocompleteWordsTimer = nil;
 	}
-}
-//analy language lib for auto complete
-#pragma mark - language lib analy
-- (void)languageLibAnaly
-{
-    [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] path:nil];
 }
 
 #pragma mark -
