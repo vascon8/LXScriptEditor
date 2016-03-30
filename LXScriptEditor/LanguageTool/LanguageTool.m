@@ -172,24 +172,39 @@
 + (NSArray*)analyDefOutput:(NSString*)output prefix:(NSString*)prefix
 {
     NSString *bSep = @"def ";
-    NSString *fSep = @"(";
+    NSString *fSep = @":";
     
-    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix libPath:nil];
+    NSArray *result = [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep backSearch:YES prefix:prefix libPath:nil];
+    
+    return [self rewrapDef:result];
+}
++ (NSArray*)rewrapDef:(NSArray*)defArr
+{
+    NSMutableArray *arr = [NSMutableArray arrayWithCapacity:defArr.count];
+    for (NSString *def in defArr) {
+        def = [def stringByReplacingOccurrencesOfString:@"self, " withString:@""];
+        def = [def stringByReplacingOccurrencesOfString:@"self," withString:@""];
+        def = [def stringByReplacingOccurrencesOfString:@"self" withString:@""];
+        
+        if(![arr containsObject:def]) [arr addObject:def];
+    }
+    
+    return arr;
 }
 + (NSArray*)analyClassOutput:(NSString*)output prefix:(NSString*)prefix libPath:(NSString*)libPath
 {
     NSString *bSep = @"class ";
     NSString *fSep = @"(";
     
-    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep prefix:prefix libPath:libPath];
+    return [self analyGrepOutput:output beginSeperator:bSep finishSeperator:fSep backSearch:NO prefix:prefix libPath:libPath];
 }
-+ (NSArray*)analyGrepOutput:(NSString*)output beginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep prefix:(NSString*)prefix libPath:(NSString*)libPath
++ (NSArray*)analyGrepOutput:(NSString*)output beginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep backSearch:(BOOL)backSearch prefix:(NSString*)prefix libPath:(NSString*)libPath
 {
     NSArray *comps = [output componentsSeparatedByString:@"\n"];
     NSMutableArray *arrM = [NSMutableArray new];
     
     for (NSString *line in comps) {
-        NSString *keyName = [self rangeOfString:line byBeginSeperator:bSep finishSeperator:fSep];
+        NSString *keyName = [self rangeOfString:line byBeginSeperator:bSep finishSeperator:fSep backsearch:backSearch];
         
 //        NSLog(@"keyName:%@",keyName);
         if(keyName) {
@@ -197,8 +212,7 @@
             
             //it is class
             if(prefix) {
-                NSString *tokenKeyName = [NSString stringWithFormat:@"%@(<!#Hello World#!>)",keyName];
-                if(![arrM containsObject:tokenKeyName]) [arrM addObject:tokenKeyName];
+                if(![arrM containsObject:keyName]) [arrM addObject:keyName];
                 
                 NSInteger i = 0;
                 while ((i < line.length)
@@ -230,10 +244,10 @@
 //    NSLog(@"arrM:%@",arrM);
     return arrM;
 }
-+ (NSString*)rangeOfString:(NSString*)str byBeginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep
++ (NSString*)rangeOfString:(NSString*)str byBeginSeperator:(NSString*)bSep finishSeperator:(NSString*)fSep backsearch:(BOOL)backSearch
 {
     NSRange bRange = [str rangeOfString:bSep];
-    NSRange fRange = [str rangeOfString:fSep];
+    NSRange fRange = [str rangeOfString:fSep options:(backSearch?NSBackwardsSearch:1)];
     NSString *result=nil;
     if (bRange.location!=NSNotFound&&fRange.location!=NSNotFound&&fRange.location>bRange.location+1) {
         NSRange range = NSMakeRange(bRange.location+bSep.length,fRange.location-bRange.location-bSep.length);

@@ -1179,10 +1179,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
     if (didComplete) {
         // 補完文字列に括弧が含まれていたら、括弧内だけを選択
         NSRange rangeToSelect = [word rangeOfString:@"(?<=\\().*(?=\\))" options:NSRegularExpressionSearch];
-        if (rangeToSelect.location != NSNotFound) {
+        if (rangeToSelect.location != NSNotFound && rangeToSelect.length>1) {
             rangeToSelect.location += charRange.location;
             if(isAddToken) rangeToSelect.length = 1;
-            NSLog(@"charR:%@,selectR:%@",NSStringFromRange(charRange),NSStringFromRange(rangeToSelect));
+//            NSLog(@"charR:%@,selectR:%@",NSStringFromRange(charRange),NSStringFromRange(rangeToSelect));
             [self setSelectedRange:rangeToSelect];
         }
     }
@@ -1190,25 +1190,70 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #pragma mark - token
 - (BOOL)addToken:(NSString*)word charRange:(NSRange)charRange
 {
-    //<!#TokenStr#!>
-    if ([word hasSuffix:@"#!>)"]) {
-        NSRange tokenBRange = [word rangeOfString:@"(<!#"];
-        if (tokenBRange.location!=NSNotFound) {
-//            NSRange selectedRange = self.selectedRange;
-            
-            NSRange tokenStrRange = NSMakeRange(tokenBRange.location+1, word.length-tokenBRange.location-2);
-            NSString *tokenStr = [word substringWithRange:tokenStrRange];
-            
-            NSRange tokenEffecRange = NSMakeRange(charRange.location+tokenBRange.location+1, tokenStr.length);
-            
-//            NSLog(@"selectRange:%@,tokenStrRange:%@,str:%@,tokenEffect:%@",NSStringFromRange(selectedRange),NSStringFromRange(tokenStrRange),tokenStr,NSStringFromRange(tokenEffecRange));
-            
-            NSAttributedString *insertionText = [self tokenForString:tokenStr range:tokenEffecRange];
-//            NSLog(@"==inseText:%@",insertionText);
-            [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:insertionText];
+    if(charRange.location == NSNotFound) return NO;
+    
+    NSRange bR = [word rangeOfString:@"("];
+    NSRange fR = [word rangeOfString:@")" options:NSBackwardsSearch];
+//    NSLog(@"==br:%@,fr:%@",NSStringFromRange(bR),NSStringFromRange(fR));
+    if (bR.location != NSNotFound && fR.location != NSNotFound && bR.location+bR.length<fR.location) {
+        NSString *subStr = [word substringWithRange:NSMakeRange(bR.location+1, fR.location-bR.location-1)];
+//        NSLog(@"=substr:%@",subStr);
+        
+        if (subStr.length>0)
+        {
+            NSArray *comps = [subStr componentsSeparatedByString:@","];
+            if (comps && comps.count>0) {
+                NSUInteger count = comps.count;
+                for (NSInteger j=count-1;j>=0;j--) {
+                    NSString *compStr = comps[j];
+                    NSInteger i = 0;
+                    while ((i < compStr.length)
+                           && [[NSCharacterSet whitespaceCharacterSet] characterIsMember:[compStr characterAtIndex:i]]) {
+                        i++;
+                    }
+                    NSString *finalStr = [compStr substringFromIndex:i];
+                    
+                    NSRange compRange = [word rangeOfString:finalStr];
+                    if(compRange.location==NSNotFound) continue;
+                    NSRange tokenEffecRange = NSMakeRange(charRange.location+compRange.location, finalStr.length);
+//                    NSLog(@"==finalstr:%@,compR:%@,tokenR:%@",finalStr,NSStringFromRange(compRange),NSStringFromRange(tokenEffecRange));
+                    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font];
+                    
+                    if(![[self.textStorage.string substringWithRange:tokenEffecRange] isEqualToString:finalStr]) continue;
+                    if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
+                        [[self textStorage] beginEditing];
+                        [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:as];
+                        [[self textStorage] endEditing];
+                    }
+                    
+                }
+            }
             return YES;
         }
+        
+//        [[self textStorage] replaceCharactersInRange:<#(NSRange)#> withAttributedString:<#(NSAttributedString *)#>];
     }
+    
+    //<!#TokenStr#!>
+//    if ([word hasSuffix:@"#!>)"]) {
+//        NSRange tokenBRange = [word rangeOfString:@"(<!#"];
+//        if (tokenBRange.location!=NSNotFound) {
+////            NSRange selectedRange = self.selectedRange;
+//            
+//            NSRange tokenStrRange = NSMakeRange(tokenBRange.location+1, word.length-tokenBRange.location-2);
+//            NSString *tokenStr = [word substringWithRange:tokenStrRange];
+//            
+//            NSRange tokenEffecRange = NSMakeRange(charRange.location+tokenBRange.location+1, tokenStr.length);
+//            
+////            NSLog(@"selectRange:%@,tokenStrRange:%@,str:%@,tokenEffect:%@",NSStringFromRange(selectedRange),NSStringFromRange(tokenStrRange),tokenStr,NSStringFromRange(tokenEffecRange));
+//            
+//            NSAttributedString *insertionText = [self tokenForString:tokenStr range:tokenEffecRange];
+////            NSLog(@"==inseText:%@",insertionText);
+//            [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:insertionText];
+//            return YES;
+//        }
+//    }
+    
     return NO;
 }
 -(NSAttributedString*)tokenForString:(NSString*)aString range:(NSRange)range
