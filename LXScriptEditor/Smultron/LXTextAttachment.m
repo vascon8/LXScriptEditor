@@ -69,8 +69,8 @@
                                                    irect.origin.y,
                                                    irect.size.width,
                                                    irect.size.height)
-                                xRadius:0.5 * irect.size.height
-                                yRadius:0.5 * irect.size.height];
+                                xRadius:0.3 * irect.size.height
+                                yRadius:0.3 * irect.size.height];
     
     [bp fill];
 
@@ -119,7 +119,7 @@
 
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
-    superPoint.y -= 4.0;
+    superPoint.y -= 5.0;
     return superPoint;
 }
 

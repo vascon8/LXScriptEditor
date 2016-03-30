@@ -1320,20 +1320,37 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         NSTextStorage *storage = self.textStorage;
         NSRange scanRange = self.selectedRange;
+        __block BOOL fond = NO;
         
-        if (scanRange.location + scanRange.length < storage.string.length-1) {
-            scanRange.location += 1;
+        if (scanRange.location!=NSNotFound && NSMaxRange(scanRange) < storage.string.length) {
+            scanRange.location += scanRange.length;
             scanRange.length = storage.length - scanRange.location;
             
             [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
                 if (value) {
                     NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
+                    fond = YES;
+                    *stop = YES;
+                }
+            }];
+        }
+        if (!fond) {
+            NSRange scanR;
+            if(scanRange.location==NSNotFound) scanR = NSMakeRange(0, storage.length-1);
+            else scanR = NSMakeRange(0, self.selectedRange.location+self.selectedRange.length);
+            
+            [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanR	 options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
+                if (value) {
+                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
+                    [self setSelectedRange:range];
+                    fond = YES;
                     *stop = YES;
                 }
             }];
         }
 
+        if(!fond) [super keyDown:theEvent];
     }
     else
     {
