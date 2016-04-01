@@ -2172,19 +2172,30 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 }
 
 #pragma mark - LXTextAttachmentCell delegate
-NSString *LXMarkupPboardType = @"com.xinliu.TemplateMarkup";
+NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 
 - (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
-    return [NSArray arrayWithObjects:LXMarkupPboardType,NSPasteboardTypeString, nil];
+    return [NSArray arrayWithObjects:NSStringPboardType, nil];
 }
 
 - (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
-    if (type == LXMarkupPboardType) {
+    if (type == NSStringPboardType) {
+        NSTextAttachmentCell *lxCell = (NSTextAttachmentCell*)cell;
+        
 		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
         [attachment setAttachmentCell:cell];
         
 		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
         [pboard writeObjects:[NSArray arrayWithObject:s]];
+//        NSPasteboardItem
+        NSLog(@"==type:%@,str:%@,%@,attstr:%@",type,s.string,s,lxCell.attributedStringValue);
+        NSLog(@"=name:%@,item:%@,type:%@",[pboard name],[pboard pasteboardItems],[pboard types]);
+        for (NSPasteboardItem *itme in [pboard pasteboardItems]) {
+            for (id type in [itme types]) {
+                NSLog(@"item:%@,type:%@,str:%@",[itme className],type,[itme stringForType:type]);
+            }
+            
+        }
     }
     
     return YES;

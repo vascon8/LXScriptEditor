@@ -11,7 +11,7 @@
 #import "SMLTextView.h"
 
 #define HorizonPadding 5.0f
-#define TokenInRectPadding 1.0f
+#define TokenInRectPadding 0.0f
 
 @implementation LXTextAttachment
 - (id)initWithName:(NSString *)name font:(NSFont*)font
@@ -69,14 +69,15 @@
                                                    irect.origin.y,
                                                    irect.size.width,
                                                    irect.size.height)
-                                xRadius:0.2 * irect.size.height
-                                yRadius:0.2 * irect.size.height];
+                                xRadius:0.5 * irect.size.height
+                                yRadius:0.5 * irect.size.height];
     
     [bp fill];
 
-    [[NSColor colorWithSRGBRed:183.0 / 255.0 green:201.0 / 255.0 blue:239.0 / 255.0 alpha:1.0] set];
-    [bp setLineWidth:1.0];
-    [bp stroke];
+    //remove round line
+//    [[NSColor colorWithSRGBRed:183.0 / 255.0 green:201.0 / 255.0 blue:239.0 / 255.0 alpha:1.0] set];
+//    [bp setLineWidth:1.0];
+//    [bp stroke];
     
     NSAttributedString *string = [self attributedStringValue];
     NSMutableAttributedString *smallerString = [[NSMutableAttributedString alloc] initWithAttributedString:string];
@@ -95,16 +96,18 @@
         textColor = [NSColor blackColor];
     }
     [smallerString addAttribute:NSForegroundColorAttributeName value:textColor range:NSMakeRange(0, string.length)];
+    
     NSSize strSize = [smallerString size];
     NSMutableParagraphStyle *ps = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
     [ps setAlignment:NSCenterTextAlignment];
     [smallerString addAttribute:NSParagraphStyleAttributeName value:ps range:NSMakeRange(0, [smallerString length])];
+    
 //    NSLog(@"strS:%@,iR:%@,cellF:%@",NSStringFromSize(strSize),NSStringFromRect(irect),NSStringFromRect(cellFrame));
     NSRect r = NSMakeRect(irect.origin.x + (irect.size.width - strSize.width) /2.0 ,
-                          irect.origin.y + (irect.size.height - strSize.height) ,
+                          irect.origin.y + (irect.size.height - strSize.height)/2.0-1.0 ,
                           strSize.width, strSize.height);
 //    [[NSColor blackColor] set];
-//    NSLog(@"rect:%@",NSStringFromRect(r));
+//    NSLog(@"rect:%@,strs:%@",NSStringFromRect(r),NSStringFromSize(strSize));
     [smallerString drawInRect:r];
 }
 
@@ -150,5 +153,12 @@
     }
     return NO;
 }
-
+- (id)copyWithZone:(NSZone *)zone
+{
+    return [self retain];
+}
+-(id)mutableCopy
+{
+    return [self retain];
+}
 @end

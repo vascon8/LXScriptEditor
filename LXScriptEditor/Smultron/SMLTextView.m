@@ -1223,6 +1223,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
                     if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
                         [[self textStorage] beginEditing];
                         [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:as];
+                        NSLog(@"==as:%@",as.string);
                         [[self textStorage] endEditing];
                     }
                     
