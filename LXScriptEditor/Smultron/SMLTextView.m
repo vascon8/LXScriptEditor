@@ -478,12 +478,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)insertText:(NSString *)aString
 {
-//    NSLog(@"insert:%@",aString);
-    self.isInsertCharacter = NO;
-    if (aString.length>0) {
-        if([[NSCharacterSet alphanumericCharacterSet] characterIsMember:[aString characterAtIndex:0]]) self.isInsertCharacter = YES;
-    }
-    
+    NSLog(@"==insert:%@",aString);
     
 	if ([aString isEqualToString:@"}"] && [[SMLDefaults valueForKey:MGSFragariaPrefsIndentNewLinesAutomatically] boolValue] == YES && [[SMLDefaults valueForKey:MGSFragariaPrefsAutomaticallyIndentBraces] boolValue] == YES) {
 		unichar characterToCheck;
@@ -1068,7 +1063,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 - (NSArray*)completionsForPartialWordRange:(NSRange)charRange indexOfSelectedItem:(NSInteger *)index
 {
 #pragma unused(index, charRange)
-    
     // get completion handler
     NSMutableArray* matchArray = [NSMutableArray array];
     
@@ -1076,7 +1070,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
     // get string to match
     NSString *matchString = [[self string] substringWithRange:charRange];
-    
+    NSLog(@"==comple:%@",matchString);
     // use handler
     if (completeHandler) {
         
@@ -1132,41 +1126,35 @@ Unless required by applicable law or agreed to in writing, software distributed 
     
 //    [[self completionTimer] invalidate];
     
-//    NSLog(@"word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
+    NSLog(@"==word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
     
-    // 補完の元になる文字列を保存する
     if (![self particalCompletionWord]) {
         [self setParticalCompletionWord:[[self string] substringWithRange:charRange]];
     }
     
-    // 補完リストを表示中に通常のキー入力があったら、直後にもう一度入力補完を行うためのフラグを立てる
-    // （フラグは CEEditorViewController > textDidChange: で評価される）
     if (flag && ([event type] == NSKeyDown) && !([event modifierFlags] & NSCommandKeyMask)) {
         NSString *inputChar = [event charactersIgnoringModifiers];
         unichar theUnichar = [inputChar characterAtIndex:0];
         
-        if ([inputChar isEqualToString:[event characters]]) { //キーバインディングの入力などを除外
-            // アンダースコアが右矢印キーと判断されることの是正
+        if ([inputChar isEqualToString:[event characters]]) {
             if (([inputChar isEqualToString:@"_"]) && (movement == NSRightTextMovement)) {
                 movement = NSIllegalTextMovement;
 //                flag = NO;
             }
             if ((movement == NSIllegalTextMovement) &&
-                (theUnichar < 0xF700) && (theUnichar != NSDeleteCharacter)) { // 通常のキー入力の判断
+                (theUnichar < 0xF700) && (theUnichar != NSDeleteCharacter)) {
 //                [self setNeedsRecompletion:YES];
             }
         }
     }
     
     if (flag) {
-        if ((movement == NSIllegalTextMovement) || (movement == NSRightTextMovement)) {  // キャンセル扱い
-            // 保存していた入力を復帰する（大文字／小文字が変更されている可能性があるため）
+        if ((movement == NSIllegalTextMovement) || (movement == NSRightTextMovement)) {
             word = [self particalCompletionWord];
         } else {
             didComplete = YES;
         }
         
-        // 補完の元になる文字列をクリア
         [self setParticalCompletionWord:nil];
     }
     
@@ -1176,7 +1164,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
     if(didComplete) isAddToken = [self addToken:word charRange:charRange];
     
     if (didComplete) {
-        // 補完文字列に括弧が含まれていたら、括弧内だけを選択
         NSRange rangeToSelect = [word rangeOfString:@"(?<=\\().*(?=\\))" options:NSRegularExpressionSearch];
         if (rangeToSelect.location != NSNotFound && rangeToSelect.length>1) {
             rangeToSelect.location += charRange.location;

@@ -59,5 +59,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 - (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)text options:(NSDictionary *)options;
 
 //only show auto complete matchs when insert
-@property BOOL isInsertCharacter;
+//@property BOOL isInsertCharacter;
 @end

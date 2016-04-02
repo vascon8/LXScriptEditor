@@ -640,6 +640,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		self.keywordEndCharacterSet = [temporaryCharacterSet copy];
 	}
 
+    NSLog(@"==keyword:%@,start:%@,end:%@:",self.keywords,self.keywordStartCharacterSet,self.keywordEndCharacterSet);
 	[self prepareRegularExpressions];
 }
 
@@ -1933,7 +1934,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  */
 - (void)textDidChange:(NSNotification *)notification
 {
-//    NSLog(@"==textchange:%@",notification);
+    NSLog(@"==textchange");
 	// send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:notification];
 
@@ -1959,8 +1960,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	}
 	
 	if (autocompleteWordsTimer != nil) {
+        NSLog(@"===fireAuto");
 		[autocompleteWordsTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue]]];
-	} else if ([[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteSuggestAutomatically] boolValue] == YES && textView.isInsertCharacter) {
+	} else if ([[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteSuggestAutomatically] boolValue] == YES) {
+        NSLog(@"==newAuto");
 		autocompleteWordsTimer = [NSTimer scheduledTimerWithTimeInterval:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue] target:self selector:@selector(autocompleteWordsTimerSelector:) userInfo:textView repeats:NO];
 	}
 	
@@ -2068,7 +2071,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	SMLTextView *textView = [aNotification object];
 		
 	NSRange editedRange = [textView selectedRange];
-    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);
+//    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);
 	
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsHighlightCurrentLine] boolValue] == YES) {
 		[self highlightLineRange:[completeString lineRangeForRange:editedRange]];
@@ -2080,13 +2083,15 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 
 //    if (editedRange.location!=NSNotFound && editedRange.length>0) {
 //        [textView.textStorage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSTextAttachment *att, NSRange range, BOOL *stop) {
-//            NSLog(@"==att:%@",att);;
+////            NSLog(@"==att:%@",att);;
 //            if (att) {
 //                NSTextAttachmentCell  *cell = (NSTextAttachmentCell*)att.attachmentCell;
 //                if ([cell isKindOfClass:[LXTextAttachmentCell class]]) {
-//                    [cell performClick:self];
-////                    [self textView:<#(NSTextView *)#> clickedOnCell:<#(id<NSTextAttachmentCell>)#> inRect:<#(NSRect)#>]
-//                    NSLog(@"==cell:%@",cell);
+//                    NSString *str = cell.attributedStringValue.string;
+//                    str = [NSString stringWithFormat:@"<!#%@#!>",str];
+//                    NSPasteboard *pboard = [NSPasteboard generalPasteboard];
+//                    [pboard writeObjects:[NSArray arrayWithObject:str]];
+////                    NSLog(@"==cell:%@",cell);
 //                }
 //            }
 //        }];
@@ -2224,10 +2229,10 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
         NSRange editedRange = storage.editedRange;
         
         [storage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
+//            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
             if (value != nil) {
                 NSTextAttachment *attachment = value;
-                NSLog(@"==attCell:%@",attachment.attachmentCell);
+//                NSLog(@"==attCell:%@",attachment.attachmentCell);
                 //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
                 //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
                 [storage beginEditing];
@@ -2295,11 +2300,12 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     
 	if (selectedRange.location <= stringLength && selectedRange.length == 0 && stringLength != 0) {
 		if (selectedRange.location == stringLength) { // If we're at the very end of the document
+            NSLog(@"==timer at end");
 			[textView complete:nil];
 		} else {
 			unichar characterAfterSelection = [completeString characterAtIndex:selectedRange.location];
 			if ([[NSCharacterSet symbolCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet whitespaceAndNewlineCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet punctuationCharacterSet] characterIsMember:characterAfterSelection] || selectedRange.location == stringLength) { // Don't autocomplete if we're in the middle of a word
-//                NSLog(@"complete===");
+                NSLog(@"==complete character:%c",characterAfterSelection);
 				[textView complete:nil];
 			}
 		}
