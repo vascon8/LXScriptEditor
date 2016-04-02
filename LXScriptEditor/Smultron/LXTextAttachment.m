@@ -10,7 +10,7 @@
 
 #import "SMLTextView.h"
 
-#define HorizonPadding 5.0f
+#define HorizonPadding 6.0f
 #define TokenInRectPadding 0.0f
 
 @implementation LXTextAttachment
@@ -44,6 +44,9 @@
         NSAttributedString *str = [[NSAttributedString alloc] initWithString:aString attributes:@{NSForegroundColorAttributeName: [NSColor blackColor],NSFontAttributeName:font}];
         [self setAttributedStringValue:str];
         [self setEditable:NO];
+        [self setSelectable:YES];
+        [self setType:NSTextCellType];
+        [self setStringValue:aString];
     }
     return self;
 }
@@ -135,7 +138,6 @@
     
     return [super trackMouse:theEvent inRect:cellFrame ofView:controlView atCharacterIndex:charIndex untilMouseUp:flag];
 }
-
 - (BOOL)isSelectedInRect:(NSRect)cellFrame ofView:(NSView *)controlView
 {
     if ([controlView isKindOfClass:[NSTextView class]]) {
@@ -153,6 +155,7 @@
     }
     return NO;
 }
+
 - (id)copyWithZone:(NSZone *)zone
 {
     return [self retain];

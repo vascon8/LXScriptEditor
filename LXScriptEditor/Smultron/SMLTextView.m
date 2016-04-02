@@ -1331,6 +1331,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
                 if (value) {
 //                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
+                    [self scrollRangeToVisible:range];
                     fond = YES;
                     *stop = YES;
                 }
@@ -1345,6 +1346,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
                 if (value) {
 //                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
+                    [self scrollRangeToVisible:range];
                     fond = YES;
                     *stop = YES;
                 }

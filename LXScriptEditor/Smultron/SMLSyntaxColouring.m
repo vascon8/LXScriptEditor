@@ -2068,7 +2068,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	SMLTextView *textView = [aNotification object];
 		
 	NSRange editedRange = [textView selectedRange];
-//    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);
+    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);
 	
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsHighlightCurrentLine] boolValue] == YES) {
 		[self highlightLineRange:[completeString lineRangeForRange:editedRange]];
@@ -2078,6 +2078,19 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		return;
 	}
 
+//    if (editedRange.location!=NSNotFound && editedRange.length>0) {
+//        [textView.textStorage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSTextAttachment *att, NSRange range, BOOL *stop) {
+//            NSLog(@"==att:%@",att);;
+//            if (att) {
+//                NSTextAttachmentCell  *cell = (NSTextAttachmentCell*)att.attachmentCell;
+//                if ([cell isKindOfClass:[LXTextAttachmentCell class]]) {
+//                    [cell performClick:self];
+////                    [self textView:<#(NSTextView *)#> clickedOnCell:<#(id<NSTextAttachmentCell>)#> inRect:<#(NSRect)#>]
+//                    NSLog(@"==cell:%@",cell);
+//                }
+//            }
+//        }];
+//    }
 	
 	NSUInteger cursorLocation = editedRange.location;
 	NSInteger differenceBetweenLastAndPresent = cursorLocation - lastCursorLocation;
@@ -2177,25 +2190,28 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 - (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
     return [NSArray arrayWithObjects:NSStringPboardType, nil];
 }
-
 - (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
     if (type == NSStringPboardType) {
         NSTextAttachmentCell *lxCell = (NSTextAttachmentCell*)cell;
+        NSString *str = lxCell.attributedStringValue.string;
+        str = [NSString stringWithFormat:@"<!#%@#!>",str];
         
-		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
-        [attachment setAttachmentCell:cell];
+//		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
+//        [attachment setAttachmentCell:cell];
+//		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
         
-		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
-        [pboard writeObjects:[NSArray arrayWithObject:s]];
+        [pboard writeObjects:[NSArray arrayWithObject:str]];
+        
+        
 //        NSPasteboardItem
-        NSLog(@"==type:%@,str:%@,%@,attstr:%@",type,s.string,s,lxCell.attributedStringValue);
-        NSLog(@"=name:%@,item:%@,type:%@",[pboard name],[pboard pasteboardItems],[pboard types]);
-        for (NSPasteboardItem *itme in [pboard pasteboardItems]) {
-            for (id type in [itme types]) {
-                NSLog(@"item:%@,type:%@,str:%@",[itme className],type,[itme stringForType:type]);
-            }
-            
-        }
+//        NSLog(@"==type:%@,str:%@,%@,attstr:%@",type,s.string,s,lxCell.attributedStringValue);
+//        NSLog(@"=name:%@,item:%@,type:%@",[pboard name],[pboard pasteboardItems],[pboard types]);
+//        for (NSPasteboardItem *itme in [pboard pasteboardItems]) {
+//            for (id type in [itme types]) {
+//                NSLog(@"item:%@,type:%@,str:%@",[itme className],type,[itme stringForType:type]);
+//            }
+//        }
+        
     }
     
     return YES;
@@ -2231,7 +2247,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
  
  */
 - (void)mgsTextDidPaste:(NSNotification *)aNotification
-{        
+{
     // send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:aNotification];
 }
