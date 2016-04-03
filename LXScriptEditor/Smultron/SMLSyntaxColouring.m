@@ -217,10 +217,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 													 name:@"NSUndoManagerDidUndoChangeNotification" 
 												   object:undoManager];
         
-        [[NSNotificationCenter defaultCenter] addObserver:self
-												 selector:@selector(undoManagerWillUndo:)
-													 name:@"NSUndoManagerWillUndoChangeNotification"
-												   object:undoManager];
+//        [[NSNotificationCenter defaultCenter] addObserver:self
+//												 selector:@selector(undoManagerWillUndo:)
+//													 name:@"NSUndoManagerWillUndoChangeNotification"
+//												   object:undoManager];
 		// add document KVO observers
 		[document addObserver:self forKeyPath:@"syntaxDefinition" options:NSKeyValueObservingOptionNew context:@"syntaxDefinition"];
 		
@@ -2266,7 +2266,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 {
 	NSUndoManager *theUndoManager = [aNote object];
     
-    NSLog(@"==did undo:%@",aNote);
+//    NSLog(@"==did undo:%@",aNote);
 	
 	NSAssert([theUndoManager isKindOfClass:[NSUndoManager class]], @"bad notification object");
 	
@@ -2278,11 +2278,11 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		//should data be reloaded?
 	}
 }
-- (void)undoManagerWillUndo:(NSNotification*)aNote
-{
-    NSLog(@"==undo:%@",aNote);
-    
-}
+//- (void)undoManagerWillUndo:(NSNotification*)aNote
+//{
+//    NSLog(@"==undo:%@",aNote);
+//    
+//}
 
 #pragma mark -
 #pragma mark NSTimer callbacks
