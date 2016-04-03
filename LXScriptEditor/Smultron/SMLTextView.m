@@ -214,13 +214,8 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
         NSData *selectionAsData;
         BOOL result;
         
-        // Serious CAUTION.
-        // Only non mutable NSAttributedStrings support archiving of custom attributes!
-        // This seems to be a bug on Apple's side!
         selection = [[[[self textStorage] attributedSubstringFromRange:[self selectedRange]] copy] autorelease];
         
-        /*        selectionAsData = [[NSArchiver archivedDataWithRootObject:selection] retain];
-         [selectionAsData release];*/
         selectionAsData = [NSArchiver archivedDataWithRootObject:selection];
         
         result = [pboard setData:selectionAsData forType:LXMarkupPboardType];
@@ -233,34 +228,38 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 {
     if (type == NSStringPboardType) // resource fork and finder info if given
     {
-        NSAttributedString* pbContent = nil;
-        
         NSData* pasteboardData = [pboard dataForType:LXMarkupPboardType];
-        pbContent = [NSUnarchiver unarchiveObjectWithData:pasteboardData];
         
-        [pbContent retain];
-        
-        
-        [[self textStorage] beginEditing];
-        
-        //NSLog(@"Inserting %@ into %@ at range %@.", result, [self textStorage], NSStringFromRange([self rangeForUserTextChange]));
-        
-        // Finally, paste in text:
-        if ([pbContent length])
-        {
-            [[self textStorage] replaceCharactersInRange:[self rangeForUserTextChange] withAttributedString:pbContent];
+        if (pasteboardData) {
+            id data = [NSUnarchiver unarchiveObjectWithData:pasteboardData];
+            
+            if ([data isKindOfClass:[NSAttributedString class]]) {
+                NSRange range = [self rangeForUserTextChange];
+                
+                NSMutableAttributedString *pbContent = [[NSMutableAttributedString alloc]initWithAttributedString:data];
+//                NSLog(@"==pbcontent:%@,eRange:%@,range:%@",pbContent,NSStringFromRange(eRange),NSStringFromRange(range));
+                
+                __block BOOL hasCell = NO;
+                [pbContent enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, pbContent.length) options:NSAttributedStringEnumerationReverse usingBlock:^(NSTextAttachment *value, NSRange range, BOOL *stop) {
+                    if (value) {
+                        hasCell = YES; *stop = YES;
+                    }
+                }];
+                
+                if (hasCell) {
+                    [self shouldChangeTextInRange:range replacementString:pbContent.string];
+                    [[self textStorage] beginEditing];
+                    [[self textStorage] replaceCharactersInRange:range withAttributedString:pbContent];
+                    [[self textStorage] endEditing];
+                    
+                    return YES;
+                }
+
+            }
         }
-        //NSLog(@"Inserted %@ into %@.", result, [self textStorage]);
-        
-        [[self textStorage] endEditing];
-        
-        [pbContent release];
-        return YES;
     }
-    else
-    {
-        return [super readSelectionFromPasteboard:pboard type:type];
-    }
+    
+    return [super readSelectionFromPasteboard:pboard type:type];
 }
 #pragma mark -
 #pragma mark KVO
@@ -1192,7 +1191,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     
 //    [[self completionTimer] invalidate];
     
-    NSLog(@"==word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
+//    NSLog(@"==word:%@,charRange:%@,str:%@",word,NSStringFromRange(charRange),[[self string] substringWithRange:charRange]);
     
     if (![self particalCompletionWord]) {
         [self setParticalCompletionWord:[[self string] substringWithRange:charRange]];
@@ -1274,10 +1273,9 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
                     
                     if(![[self.textStorage.string substringWithRange:tokenEffecRange] isEqualToString:finalStr]) continue;
                     if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
+                        [self shouldChangeTextInRange:tokenEffecRange replacementString:as.string];
                         [[self textStorage] beginEditing];
                         [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:as];
-                        
-                        NSLog(@"==as:%@",as.string);
                         [[self textStorage] endEditing];
                     }
                     
@@ -1286,7 +1284,6 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
             return YES;
         }
         
-//        [[self textStorage] replaceCharactersInRange:<#(NSRange)#> withAttributedString:<#(NSAttributedString *)#>];
     }
     
     //<!#TokenStr#!>

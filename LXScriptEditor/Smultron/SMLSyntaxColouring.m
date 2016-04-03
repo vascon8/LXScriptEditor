@@ -2207,14 +2207,13 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
         [attachment setAttachmentCell:cell];
 		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
-        
-//        [pboard writeObjects:[NSArray arrayWithObject:cell]];
 
+//        NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:attachment];
         NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:s];
         
         [pboard setData:selectionAsData forType:LXMarkupPboardType];
         
-        NSLog(@"==wri:%@,read:%@",aTextView.writablePasteboardTypes,aTextView.readablePasteboardTypes);
+//        NSLog(@"==wri:%@,read:%@",aTextView.writablePasteboardTypes,aTextView.readablePasteboardTypes);
         
     }
     
@@ -2228,10 +2227,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 //        NSRange editedRange = storage.editedRange;
 //        
 //        [storage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-////            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
+//            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
 //            if (value != nil) {
 //                NSTextAttachment *attachment = value;
-////                NSLog(@"==attCell:%@",attachment.attachmentCell);
+//                NSLog(@"==attCell:%@",attachment.attachmentCell);
 //                //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
 //                //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
 //                [storage beginEditing];
@@ -2282,6 +2281,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 - (void)undoManagerWillUndo:(NSNotification*)aNote
 {
     NSLog(@"==undo:%@",aNote);
+    
 }
 
 #pragma mark -

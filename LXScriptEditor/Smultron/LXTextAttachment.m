@@ -12,6 +12,7 @@
 
 #define HorizonPadding 6.0f
 #define TokenInRectPadding 0.0f
+#define TokenFontDelta 1.0f
 
 @implementation LXTextAttachment
 - (id)initWithName:(NSString *)name font:(NSFont*)font
@@ -87,7 +88,9 @@
 
     NSTextView *tv = (NSTextView *) controlView;
     NSFont *f = tv.textStorage.font;
-
+//    NSLog(@"==f:%@",f);
+    f = [NSFont fontWithName:f.fontName size:f.pointSize-TokenFontDelta];
+//    NSLog(@"==f:%@",f);
     [smallerString addAttribute:NSFontAttributeName
                           value:f
                           range:NSMakeRange(0, [string length])];
@@ -118,14 +121,14 @@
 {
     NSAttributedString *str = [self attributedStringValue];
     NSSize size = [str size];
-    NSSize cellS = NSMakeSize(2.0*HorizonPadding+2.0*TokenInRectPadding + 2.0*TokenInRectPadding +size.width,size.height);
+    NSSize cellS = NSMakeSize(2.0*HorizonPadding+2.0*TokenInRectPadding + 2.0*TokenInRectPadding +size.width,size.height-2*TokenFontDelta);
 //    NSLog(@"cellS:%@,size:%@",NSStringFromSize(cellS),NSStringFromSize(size));
     return cellS;
 }
 
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
-    superPoint.y -= 5.0;
+    superPoint.y -= 3.0;
     return superPoint;
 }
 
