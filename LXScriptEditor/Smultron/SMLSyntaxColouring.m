@@ -216,7 +216,11 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 												 selector:@selector(undoManagerDidUndo:) 
 													 name:@"NSUndoManagerDidUndoChangeNotification" 
 												   object:undoManager];
-		
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(undoManagerWillUndo:)
+													 name:@"NSUndoManagerWillUndoChangeNotification"
+												   object:undoManager];
 		// add document KVO observers
 		[document addObserver:self forKeyPath:@"syntaxDefinition" options:NSKeyValueObservingOptionNew context:@"syntaxDefinition"];
 		
@@ -640,7 +644,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		self.keywordEndCharacterSet = [temporaryCharacterSet copy];
 	}
 
-    NSLog(@"==keyword:%@,start:%@,end:%@:",self.keywords,self.keywordStartCharacterSet,self.keywordEndCharacterSet);
+//    NSLog(@"==keyword:%@,start:%@,end:%@:",self.keywords,self.keywordStartCharacterSet,self.keywordEndCharacterSet);
 	[self prepareRegularExpressions];
 }
 
@@ -1934,7 +1938,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  */
 - (void)textDidChange:(NSNotification *)notification
 {
-    NSLog(@"==textchange");
+//    NSLog(@"==textchange");
 	// send out document delegate notifications
 	[self performDocumentDelegateSelector:_cmd withObject:notification];
 
@@ -1960,10 +1964,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	}
 	
 	if (autocompleteWordsTimer != nil) {
-        NSLog(@"===fireAuto");
+//        NSLog(@"===fireAuto");
 		[autocompleteWordsTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue]]];
 	} else if ([[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteSuggestAutomatically] boolValue] == YES) {
-        NSLog(@"==newAuto");
+//        NSLog(@"==newAuto");
 		autocompleteWordsTimer = [NSTimer scheduledTimerWithTimeInterval:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue] target:self selector:@selector(autocompleteWordsTimerSelector:) userInfo:textView repeats:NO];
 	}
 	
@@ -2190,58 +2194,53 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 }
 
 #pragma mark - LXTextAttachmentCell delegate
-NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 
 - (NSArray *)textView:(NSTextView *)aTextView writablePasteboardTypesForCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex {
-    return [NSArray arrayWithObjects:NSStringPboardType, nil];
+    return [NSArray arrayWithObjects:LXMarkupPboardType, nil];
 }
 - (BOOL)textView:(NSTextView *)aTextView writeCell:(id <NSTextAttachmentCell>)cell atIndex:(NSUInteger)charIndex toPasteboard:(NSPasteboard *)pboard type:(NSString *)type {
-    if (type == NSStringPboardType) {
-        NSTextAttachmentCell *lxCell = (NSTextAttachmentCell*)cell;
-        NSString *str = lxCell.attributedStringValue.string;
-        str = [NSString stringWithFormat:@"<!#%@#!>",str];
+    if (type == LXMarkupPboardType) {
+//        NSTextAttachmentCell *lxCell = (NSTextAttachmentCell*)cell;
+//        NSString *str = lxCell.attributedStringValue.string;
+//        str = [NSString stringWithFormat:@"<!#%@#!>",str];
+    
+		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
+        [attachment setAttachmentCell:cell];
+		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
         
-//		NSTextAttachment *attachment = [[NSTextAttachment new] autorelease];
-//        [attachment setAttachmentCell:cell];
-//		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
+//        [pboard writeObjects:[NSArray arrayWithObject:cell]];
+
+        NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:s];
         
-        [pboard writeObjects:[NSArray arrayWithObject:str]];
+        [pboard setData:selectionAsData forType:LXMarkupPboardType];
         
-        
-//        NSPasteboardItem
-//        NSLog(@"==type:%@,str:%@,%@,attstr:%@",type,s.string,s,lxCell.attributedStringValue);
-//        NSLog(@"=name:%@,item:%@,type:%@",[pboard name],[pboard pasteboardItems],[pboard types]);
-//        for (NSPasteboardItem *itme in [pboard pasteboardItems]) {
-//            for (id type in [itme types]) {
-//                NSLog(@"item:%@,type:%@,str:%@",[itme className],type,[itme stringForType:type]);
-//            }
-//        }
+        NSLog(@"==wri:%@,read:%@",aTextView.writablePasteboardTypes,aTextView.readablePasteboardTypes);
         
     }
     
     return YES;
 }
-- (void)textStorageWillProcessEditing:(NSNotification *)notification
-{
-    NSTextStorage *storage = notification.object;
-    
-    if ((storage.editedMask & NSTextStorageEditedCharacters) == NSTextStorageEditedCharacters) {
-        NSRange editedRange = storage.editedRange;
-        
-        [storage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-//            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
-            if (value != nil) {
-                NSTextAttachment *attachment = value;
-//                NSLog(@"==attCell:%@",attachment.attachmentCell);
-                //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
-                //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
-                [storage beginEditing];
-                [storage replaceCharactersInRange:range withAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
-                [storage endEditing];
-            }
-        }];
-    }
-}
+//- (void)textStorageWillProcessEditing:(NSNotification *)notification
+//{
+//    NSTextStorage *storage = notification.object;
+//    
+//    if ((storage.editedMask & NSTextStorageEditedCharacters) == NSTextStorageEditedCharacters) {
+//        NSRange editedRange = storage.editedRange;
+//        
+//        [storage enumerateAttribute:NSAttachmentAttributeName inRange:editedRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
+////            NSLog(@"==enu:%@,%@",value,NSStringFromRange(range));
+//            if (value != nil) {
+//                NSTextAttachment *attachment = value;
+////                NSLog(@"==attCell:%@",attachment.attachmentCell);
+//                //			NSLog(@"%@", attachment.fileWrapper.preferredFilename);
+//                //[s replaceCharactersInRange:range withAttributedString:[[NSAttributedString alloc] initWithString:attachment.fileWrapper.preferredFilename]];
+//                [storage beginEditing];
+//                [storage replaceCharactersInRange:range withAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+//                [storage endEditing];
+//            }
+//        }];
+//    }
+//}
 
 #pragma mark -
 #pragma mark MGSFragariaTextViewDelegate
@@ -2267,6 +2266,8 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 - (void)undoManagerDidUndo:(NSNotification *)aNote
 {
 	NSUndoManager *theUndoManager = [aNote object];
+    
+    NSLog(@"==did undo:%@",aNote);
 	
 	NSAssert([theUndoManager isKindOfClass:[NSUndoManager class]], @"bad notification object");
 	
@@ -2278,7 +2279,10 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 		//should data be reloaded?
 	}
 }
-
+- (void)undoManagerWillUndo:(NSNotification*)aNote
+{
+    NSLog(@"==undo:%@",aNote);
+}
 
 #pragma mark -
 #pragma mark NSTimer callbacks
@@ -2300,12 +2304,12 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     
 	if (selectedRange.location <= stringLength && selectedRange.length == 0 && stringLength != 0) {
 		if (selectedRange.location == stringLength) { // If we're at the very end of the document
-            NSLog(@"==timer at end");
+//            NSLog(@"==timer at end");
 			[textView complete:nil];
 		} else {
 			unichar characterAfterSelection = [completeString characterAtIndex:selectedRange.location];
 			if ([[NSCharacterSet symbolCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet whitespaceAndNewlineCharacterSet] characterIsMember:characterAfterSelection] || [[NSCharacterSet punctuationCharacterSet] characterIsMember:characterAfterSelection] || selectedRange.location == stringLength) { // Don't autocomplete if we're in the middle of a word
-                NSLog(@"==complete character:%c",characterAfterSelection);
+//                NSLog(@"==complete character:%c",characterAfterSelection);
 				[textView complete:nil];
 			}
 		}

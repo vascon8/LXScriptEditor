@@ -24,6 +24,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 #import "LXTextAttachment.h"
 
+NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
+
 // class extension
 @interface SMLTextView()
 - (void)windowDidBecomeMainOrKey:(NSNotification *)note;
@@ -196,7 +198,70 @@ Unless required by applicable law or agreed to in writing, software distributed 
         [(id)self.delegate mgsTextDidPaste:note];
     }
 }
-
+- (NSArray *)writablePasteboardTypes
+{
+    return [[super writablePasteboardTypes] arrayByAddingObject:LXMarkupPboardType];
+}
+- (NSArray *)readablePasteboardTypes
+{
+    return [[super readablePasteboardTypes] arrayByAddingObject:LXMarkupPboardType];
+}
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard type:(NSString *)type
+{
+    if (type == LXMarkupPboardType)
+    {
+        NSAttributedString *selection;
+        NSData *selectionAsData;
+        BOOL result;
+        
+        // Serious CAUTION.
+        // Only non mutable NSAttributedStrings support archiving of custom attributes!
+        // This seems to be a bug on Apple's side!
+        selection = [[[[self textStorage] attributedSubstringFromRange:[self selectedRange]] copy] autorelease];
+        
+        /*        selectionAsData = [[NSArchiver archivedDataWithRootObject:selection] retain];
+         [selectionAsData release];*/
+        selectionAsData = [NSArchiver archivedDataWithRootObject:selection];
+        
+        result = [pboard setData:selectionAsData forType:LXMarkupPboardType];
+        
+        return result;
+    }
+    return [super writeSelectionToPasteboard:pboard type:type];
+}
+- (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard type:(NSString *)type
+{
+    if (type == NSStringPboardType) // resource fork and finder info if given
+    {
+        NSAttributedString* pbContent = nil;
+        
+        NSData* pasteboardData = [pboard dataForType:LXMarkupPboardType];
+        pbContent = [NSUnarchiver unarchiveObjectWithData:pasteboardData];
+        
+        [pbContent retain];
+        
+        
+        [[self textStorage] beginEditing];
+        
+        //NSLog(@"Inserting %@ into %@ at range %@.", result, [self textStorage], NSStringFromRange([self rangeForUserTextChange]));
+        
+        // Finally, paste in text:
+        if ([pbContent length])
+        {
+            [[self textStorage] replaceCharactersInRange:[self rangeForUserTextChange] withAttributedString:pbContent];
+        }
+        //NSLog(@"Inserted %@ into %@.", result, [self textStorage]);
+        
+        [[self textStorage] endEditing];
+        
+        [pbContent release];
+        return YES;
+    }
+    else
+    {
+        return [super readSelectionFromPasteboard:pboard type:type];
+    }
+}
 #pragma mark -
 #pragma mark KVO
 
@@ -478,7 +543,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
  */
 - (void)insertText:(NSString *)aString
 {
-    NSLog(@"==insert:%@",aString);
+//    NSLog(@"==insert:%@",aString);
     
 	if ([aString isEqualToString:@"}"] && [[SMLDefaults valueForKey:MGSFragariaPrefsIndentNewLinesAutomatically] boolValue] == YES && [[SMLDefaults valueForKey:MGSFragariaPrefsAutomaticallyIndentBraces] boolValue] == YES) {
 		unichar characterToCheck;
@@ -635,6 +700,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 {
 	BOOL undo = [[options objectForKey:@"undo"] boolValue];
     BOOL textViewWasEmpty = ([self.textStorage length] == 0 ? YES : NO);
+    NSLog(@"==undo");
 
 	if ([self isEditable] && undo) {
 
@@ -1070,7 +1136,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
     // get string to match
     NSString *matchString = [[self string] substringWithRange:charRange];
-    NSLog(@"==comple:%@",matchString);
+//    NSLog(@"==comple:%@",matchString);
     // use handler
     if (completeHandler) {
         
@@ -1210,6 +1276,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
                     if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
                         [[self textStorage] beginEditing];
                         [[self textStorage] replaceCharactersInRange:tokenEffecRange withAttributedString:as];
+                        
                         NSLog(@"==as:%@",as.string);
                         [[self textStorage] endEditing];
                     }
