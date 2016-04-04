@@ -14,8 +14,13 @@
 + (NSArray*)analyLanguage:(NSString*)lang path:(NSArray*)pathArr
 {
     NSArray *arr = nil;
-    if ([[lang lowercaseString] isEqualToString:@"python"]) {
+    NSString *langStr = [lang lowercaseString];
+    
+    if ([langStr isEqualToString:@"python"]) {
         arr = [self validatePython];
+    }
+    else if ([langStr isEqualToString:@"java"]){
+//    ls *.java|xargs egrep "public\s{1,10}[a-zA-Z0-9_-]{1,200}\s{1,10}[a-zA-Z0-9_-]{1,200}\([a-zA-Z0-9, -_]{0,}\)\s{1,10}\{"
     }
     
     return arr;
