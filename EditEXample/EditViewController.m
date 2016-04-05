@@ -54,7 +54,7 @@
         NSString *path = @"/Users/xinliu/TestWA/New_Project16/RecordScript/weibo_webView_iOS_03081637.java" ;
         NSString *str =  [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
         
-        [self.fragaria setObject:@"Python" forKey:MGSFOSyntaxDefinitionName];
+        [self.fragaria setObject:@"Java" forKey:MGSFOSyntaxDefinitionName];
         [self.fragaria setString:str];
         [self.fragaria reloadString];
     }

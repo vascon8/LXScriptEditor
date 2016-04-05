@@ -407,8 +407,8 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	}
     
     //analyse language lib
-    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib",@"/a/b/c"]];
-    if (libKeywords) {
+    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
+    if (libKeywords && libKeywords.count>1) {
         [keywordsAndAutocompleteWordsTemporary addObjectsFromArray:libKeywords];
     }
     
