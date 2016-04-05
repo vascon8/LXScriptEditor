@@ -9,5 +9,5 @@
 #import <Foundation/Foundation.h>
 
 @interface LanguageTool : NSObject
-+ (NSArray*)analyLanguage:(NSString*)lang path:(NSArray*)pathArr;
++ (NSArray*)analyLanguage:(NSString*)lang libPathArr:(NSArray*)libPathArr;
 @end
