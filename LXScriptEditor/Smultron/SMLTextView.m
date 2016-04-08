@@ -1242,7 +1242,9 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 - (BOOL)addToken:(NSString*)word charRange:(NSRange)charRange
 {
     if(charRange.location == NSNotFound) return NO;
-    if(![[[fragaria.docSpec valueForKey:MGSFOSyntaxDefinitionName] lowercaseString] isEqualToString:@"python"]) return NO;
+    NSString *lang = [fragaria.docSpec valueForKey:MGSFOSyntaxDefinitionName];
+    lang = [lang lowercaseString];
+    if(![lang isEqualToString:@"python"] && ![lang isEqualToString:@"java"]) return NO;
     
     NSRange bR = [word rangeOfString:@"("];
     NSRange fR = [word rangeOfString:@")" options:NSBackwardsSearch];

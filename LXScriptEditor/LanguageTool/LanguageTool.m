@@ -22,6 +22,9 @@
     else if ([langStr isEqualToString:@"java"]){
         arr = [self validateJavaLibPath:libPathArr];
 //    ls *.java|xargs egrep "public\s{1,10}[a-zA-Z0-9_-]{1,200}\s{1,10}[a-zA-Z0-9_-]{1,200}\([a-zA-Z0-9, -_]{0,}\)\s{1,10}\{"
+//        ls *.java|xargs egrep -e "public\s{1,10}[a-zA-Z0-9_-]{1,200}\s{1,10}[a-zA-Z0-9_-]{1,200}\([a-zA-Z0-9, -_]{0,}|\n[a-zA-Z0-9 _-]{0,100}\)\s{0,20}\{"|wc -l
+//        ls *.java|xargs awk '/public[ ]+[a-zA-Z0-9<>_-]{1,200}[ ]+[a-zA-Z0-9-_]{1,200} {0,10}\([<>a-zA-Z0-9 ,-_]{0,500}\) {0,20}\{ {0,200}/'
+//        sed -e ":begin; /<<</,/>>>/ { />>>/! { $! { N; b begin }; }; s/<<<.*>>>/COMMENT/; };" test
     }
     
     return arr;
@@ -32,80 +35,117 @@
 {
     NSString *commandStr = @"java -version;echo $?";
     NSString *output = [self runTaskInUserShellWithCommand:commandStr];
-    NSMutableArray *keywordArr = nil;
+    NSMutableArray *keywordArr = [NSMutableArray array];
     
-    //    if ([self isTaskSuccessfulByRC:output] && libPath && libPath.count>0) {
-    
-    for (NSString *path in libPath) {
-        BOOL isDir = NO;
-        if ([[NSFileManager defaultManager]fileExistsAtPath:path isDirectory:&isDir] && isDir) {
-            NSError *error;
-            NSArray *contsArr = [[NSFileManager defaultManager]contentsOfDirectoryAtPath:path error:&error];
-            
-            if (!error && contsArr) {
-                for (NSString *dirName in contsArr) {
-                    NSString *enuPath = [path stringByAppendingPathComponent:dirName];
-//                                          NSLog(@"dir:%@",enuPath);
-                    [keywordArr addObjectsFromArray:[self enuLibPath:enuPath prefix:@"import" lang:@"Java"]];
-                }
+    if ([self isTaskSuccessfulByRC:output] && libPath && libPath.count>0) {
+        
+        for (NSString *path in libPath) {
+            BOOL isDir = NO;
+            if ([[NSFileManager defaultManager]fileExistsAtPath:path isDirectory:&isDir] && isDir) {
+                NSArray *arr = [self enuLibPath:path prefix:@"import" lang:@"Java"];
+                if(arr) [keywordArr addObjectsFromArray:arr];
             }
-            
-            
         }
     }
-//}
     //    NSLog(@"key:%@",keywordArr);
     return keywordArr;
 }
-+ (NSArray*)analyJavaFileUnderDir:(NSString*)dir prefix:(NSString*)prefix libPath:(NSString*)libPath
++ (NSArray*)analyJavaFileUnderDir:(NSString*)dir
 {
     NSMutableArray *arrM = [NSMutableArray new];
     
-    NSString *methodCommand = @"ls *.java|xargs egrep \"public\\s{1,20}[a-zA-Z0-9_-]{1,200}\\s{1,20}[a-zA-Z0-9_-]{1,200}\\s{0,10}\\([a-zA-Z0-9, -_';:&!#$\\w]{0,}\\)\\s{1,10}{\"";
-    NSString *methodOutput = [self runTaskInUserShellWithCommand:methodCommand currentPath:dir];
-
-//    NSLog(@"dir:%@ ==classOut:%@\n",dir,methodOutput);
-    if(prefix) prefix = [NSString stringWithFormat:@"import %@",libPath];
-//    NSLog(@"==prefix:%@",prefix);
-    [arrM addObjectsFromArray:[self analyJavaClassOutput:methodOutput prefix:prefix libPath:libPath]];
+    NSError *error = nil;
+    NSString *file = [NSString stringWithContentsOfFile:dir encoding:NSUTF8StringEncoding error:&error];
+    if(error) NSLog(@"==error:%@",error);
+    
+    if(error) return nil;
+    
+    NSString *pattern = @"public\\s{1,20}[\\d\\w-_<>]{1,200}\\s{1,20}[\\d\\w-_]{1,200}\\s{0,20}\\([\\d\\w\\n\\s,-_<>]{0,200}\\)[\\d\\w\\s]{0,50}\\{";
+    
+    NSUInteger length = file.length;
+    NSRegularExpression  *r = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:&error];
+    NSArray *matchs = [r matchesInString:file options:NSMatchingReportProgress range:NSMakeRange(0, length)];
+    if(error) NSLog(@"==eror:%@",error);
+    
+    for (int i=0; i<matchs.count; i++) {
+        NSTextCheckingResult *result = [matchs objectAtIndex:i];
+        NSRange range = [result rangeAtIndex:0];
+        if (range.location != NSNotFound && range.length<length) {
+            NSString *str = [file substringWithRange:range];
+//            str = [str stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+            
+//            NSLog(@"==match:%@",str);
+            NSString *finalResult = [self analyJavaClassStr:str];
+            if(finalResult && ![arrM containsObject:finalResult]) [arrM addObject:finalResult];
+        }
+    }
+    
+//    NSString *methodCommand = @"ls *.java|xargs egrep \"public\\s{1,20}[a-zA-Z0-9_-<>]{1,200}\\s{1,20}[a-zA-Z0-9_-]{1,200}\\s{0,10}\\([a-zA-Z0-9, -_';:&!#$\\w]{0,}\\)\\s{1,10}{\"";
+//    NSString *methodOutput = [self runTaskInUserShellWithCommand:methodCommand currentPath:dir];
+//
+////    NSLog(@"dir:%@ ==classOut:%@\n",dir,methodOutput);
+//    if(prefix) prefix = [NSString stringWithFormat:@"import %@",libPath];
+////    NSLog(@"==prefix:%@",prefix);
+//    [arrM addObjectsFromArray:[self analyJavaClassOutput:methodOutput prefix:prefix libPath:libPath]];
     
     //    NSLog(@"analy file key:%@\n",arrM);
     return arrM;
 }
-+ (NSArray *)analyJavaClassOutput:(NSString*)output prefix:(NSString*)prefix libPath:(NSString*)libPath
++ (NSString *)analyJavaClassStr:(NSString*)classStr
 {
-    if(!output) return nil;
-    NSMutableArray *arrM = [NSMutableArray array];
-    NSArray *comps = [output componentsSeparatedByString:@"\n"];
-    for (NSString *line in comps) {
-        NSRange rangeEnd = [line rangeOfString:@")" options:NSBackwardsSearch];
-        NSRange rangeTag = [line rangeOfString:@"(" options:NSBackwardsSearch];
+    if(!classStr) return nil;
+    
+    NSRange rangeEnd = [classStr rangeOfString:@")" options:NSBackwardsSearch];
+    NSRange rangeTag = [classStr rangeOfString:@"(" options:NSBackwardsSearch];
+    
+    if (rangeEnd.location!=NSNotFound && rangeTag.location!=NSNotFound && rangeTag.location<rangeEnd.location) {
         
-        if (rangeEnd.location!=NSNotFound && rangeTag.location!=NSNotFound && rangeTag.location<rangeEnd.location) {
-            NSUInteger i=rangeTag.location-1;
-            //public ? ?,leng 9
-            while (i > 9 && i<line.length){
-                if([[NSCharacterSet whitespaceCharacterSet] characterIsMember:[line characterAtIndex:i]]) {
-                    line = [line stringByReplacingCharactersInRange:NSMakeRange(i, 1) withString:@""];
-                    rangeTag.location--;
+        NSUInteger i = rangeTag.location+1;
+        int j=1;
+        while (i>9 && i<rangeEnd.location) {
+            NSUInteger index = [classStr characterAtIndex:i] ;
+            if ('\n' == index || index == 13) {
+//                NSLog(@"==found enter");
+                classStr = [classStr stringByReplacingCharactersInRange:NSMakeRange(i, 1) withString:@""];
+                rangeEnd.location --;
+            }
+            else if([[NSCharacterSet whitespaceCharacterSet] characterIsMember:[classStr characterAtIndex:i]]) {
+                //                NSLog(@"== found==%@,i:%ld,loc:%ld",classStr,i,rangeEnd.location);
+                if (j>0) {
+                    classStr = [classStr stringByReplacingCharactersInRange:NSMakeRange(i, 1) withString:@""];
                     rangeEnd.location--;
-                    i--;
                 }
-                else break;
-                
+                else{
+                    j++;i++;
+                }
             }
+            else {i++;j=0;}
+        }
+        
+        i=rangeTag.location-1;
+        //public ? ?,leng 9
+        while (i > 9 && i<classStr.length){
+            if([[NSCharacterSet whitespaceCharacterSet] characterIsMember:[classStr characterAtIndex:i]]) {
+                classStr = [classStr stringByReplacingCharactersInRange:NSMakeRange(i, 1) withString:@""];
+                rangeTag.location--;
+                rangeEnd.location--;
+                i--;
+            }
+            else break;
             
-            NSRange rangeBegin = [line rangeOfString:@" " options:NSBackwardsSearch range:NSMakeRange(0, i)];
-            if (rangeBegin.location!=NSNotFound && rangeBegin.location<rangeTag.location+1) {
-                NSRange range = NSMakeRange(rangeBegin.location+1, rangeEnd.location-rangeBegin.location);
-                NSString *resultStr = [line substringWithRange:range];
-                NSLog(@"==resultStr:%@",resultStr);
-                if(![arrM containsObject:resultStr] && resultStr.length>2) [arrM addObject:resultStr];
-            }
+        }
+    
+        NSRange rangeBegin = [classStr rangeOfString:@" " options:NSBackwardsSearch range:NSMakeRange(0, i)];
+        if (rangeBegin.location!=NSNotFound && rangeBegin.location<rangeTag.location+1) {
+            NSRange range = NSMakeRange(rangeBegin.location+1, rangeEnd.location-rangeBegin.location);
+            NSString *resultStr = [classStr substringWithRange:range];
+//            NSLog(@"==resultStr:%@",resultStr);
+
+            return resultStr;
         }
     }
     
-    return arrM;
+    return nil;
 }
 #pragma mark python
 + (NSArray*)validatePythonLibPathArr:(NSArray *)libPathArr
@@ -229,30 +269,46 @@
     {
         arrM = [NSMutableArray new];
         NSString *tmpLibKey = [libPath lastPathComponent];
-        [arrM addObjectsFromArray:[self analyFileUnderDir:libPath prefix:prefix libPath:tmpLibKey]];
         
-        if([[lang lowercaseString]isEqualToString:@"python"]) [arrM addObjectsFromArray:[self analyFileUnderDir:libPath prefix:prefix libPath:tmpLibKey]];
-        else if ([[lang lowercaseString]isEqualToString:@"java"]) [arrM addObjectsFromArray:[self analyJavaFileUnderDir:libPath prefix:prefix libPath:tmpLibKey]];
+        if([[lang lowercaseString]isEqualToString:@"python"])
+        {
+            [arrM addObjectsFromArray:[self analyFileUnderDir:libPath prefix:prefix libPath:tmpLibKey]];
+        }
         
         NSDirectoryEnumerator *libEnu = [[NSFileManager defaultManager]enumeratorAtPath:libPath];
         NSString *compName;
         
-        if (isDir) {
+        if (isDir)
+        {
             while (compName = [libEnu nextObject]) {
                 //                NSLog(@"===compName:%@",compName);
                 NSString *compPath = [libPath stringByAppendingPathComponent:compName];
-                BOOL subIsDir;
+                BOOL subIsDir = NO;
                 if([[NSFileManager defaultManager]fileExistsAtPath:compPath isDirectory:&subIsDir]){
+                    NSString *tmpName = compName;
+                    tmpName = [compName stringByReplacingOccurrencesOfString:@"/" withString:@"."];
+                    NSString *dirPrefix = [NSString stringWithFormat:@"%@.%@",prefix,tmpName];
+                    NSString *libKey = [NSString stringWithFormat:@"%@.%@",[libPath lastPathComponent],tmpName];
+                    
                     if (subIsDir) {
-                        NSString *tmpName = compName;
-                        tmpName = [compName stringByReplacingOccurrencesOfString:@"/" withString:@"."];
-                        
-                        NSString *dirPrefix = [NSString stringWithFormat:@"%@.%@",prefix,tmpName];
-                        
-                        NSString *libKey = [NSString stringWithFormat:@"%@.%@",[libPath lastPathComponent],tmpName];
-                        
                         if([[lang lowercaseString]isEqualToString:@"python"]) [arrM addObjectsFromArray:[self analyFileUnderDir:compPath prefix:dirPrefix libPath:libKey]];
-                        else if ([[lang lowercaseString]isEqualToString:@"java"]) [arrM addObjectsFromArray:[self analyJavaFileUnderDir:compPath prefix:tmpName libPath:libKey]];
+                    }
+                    else{
+                        if ([[lang lowercaseString]isEqualToString:@"java"] && [compName hasSuffix:@"java"])
+                        {
+//                            NSLog(@"==tmppath:%@",tmpName);
+                            NSArray *arr = [self analyJavaFileUnderDir:compPath];
+                            if(arr && arr.count>0) [arrM addObjectsFromArray:arr];
+                            
+                            NSString *classStr = [tmpName stringByDeletingPathExtension];
+                            if(classStr)
+                            {
+                                if(![arrM containsObject:classStr]) [arrM addObject:classStr];
+                                
+                                NSString *libStr = [NSString stringWithFormat:@"import %@",classStr];
+                                if(![arrM containsObject:libStr]) [arrM addObject:libStr];
+                            }
+                        }
                     }
                 }
                 
