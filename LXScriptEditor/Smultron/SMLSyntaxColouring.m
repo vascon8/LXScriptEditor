@@ -667,20 +667,20 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
     if ([lang isEqualToString:@"java"]) {
         if (!self.javaKeyArr || self.javaKeyArr.count == 0) {
             self.javaKeyArr = [LanguageTool analyLanguage:lang libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
-            NSLog(@"==java empty lib");
+//            NSLog(@"==java empty lib");
         }
         else{
-            NSLog(@"==java already get lib");
+//            NSLog(@"==java already get lib");
         }
         keyArr = self.javaKeyArr;
     }
     else if ([lang isEqualToString:@"python"]){
         if (!self.pythonKeyArr || self.pythonKeyArr.count == 0) {
             self.pythonKeyArr = [LanguageTool analyLanguage:lang libPathArr:nil];
-            NSLog(@"==python empty lib");
+//            NSLog(@"==python empty lib");
         }
         else{
-            NSLog(@"==python already get lib");
+//            NSLog(@"==python already get lib");
         }
         keyArr = self.pythonKeyArr;
     }
@@ -2119,6 +2119,9 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	}
 	
 	SMLTextView *textView = [aNotification object];
+    
+    //tag
+    [[document objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:textView.enclosingScrollView.contentView checkWidth:NO recolour:YES];
 		
 	NSRange editedRange = [textView selectedRange];
 //    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);

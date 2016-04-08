@@ -165,6 +165,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         for (idx = 0, lineNumber = 0; idx < (NSInteger)visibleRange.location; lineNumber++) {
             idx = NSMaxRange([searchString lineRangeForRange:NSMakeRange(idx, 0)]);
+            NSLog(@"==searchstr:%@ idx:%ld number:%ld",searchString,idx,lineNumber);
         }
         
         NSInteger indexNonWrap = [searchString lineRangeForRange:NSMakeRange(idx, 0)].location;
@@ -177,18 +178,27 @@ Unless required by applicable law or agreed to in writing, software distributed 
                 oneMoreTime = YES; // Continue one more time through the loop if the last glyph isn't newline
             }
         }
-        NSMutableString *lineNumbersString = [[[NSMutableString alloc] init] autorelease];
+        NSMutableAttributedString *lineNumbersStringM = [[[NSMutableAttributedString alloc] init] autorelease];
         
         int textLine = 0;
         NSMutableArray* textLineBreakpoints = [NSMutableArray array];
         
         // generate line number string
-        while (indexNonWrap <= maxRangeVisibleRange) {
+        while (indexNonWrap <= maxRangeVisibleRange)
+        {
+            NSRange selectedR = [layoutManager.textViewForBeginningOfSelection selectedRange];
+            
             
             // wrap or not
             if (idx == indexNonWrap) {
                 lineNumber++;
-                [lineNumbersString appendFormat:@"%li\n", (long)lineNumber];
+//                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
+                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li ha\n", (long)lineNumber] attributes:nil]];
+                 
+                if ([textString lineRangeForRange:selectedR].location == idx) {
+                    NSLog(@"==selected:%ld",lineNumber);
+                    //                    NSLog(@"indexWrp:%ld, visRange:%ld %@ , max:%ld",indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
+                }
                 textLine++;
                 
                 // flag breakpoints
@@ -197,7 +207,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
                     [textLineBreakpoints addObject:[NSNumber numberWithInt:textLine]];
                 }
             } else {
-                [lineNumbersString appendFormat:@"%C\n", (unsigned short)0x00B7];
+//                [lineNumbersString appendFormat:@"%C\n", (unsigned short)0x00B7];
                 indexNonWrap = idx;
                 textLine++;
             }
@@ -218,7 +228,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         // check width is okay
         if (checkWidth == YES) {
-            NSInteger widthOfStringInGutter = [lineNumbersString sizeWithAttributes:self.attributes].width;
+            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
             
             if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
                 [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
@@ -240,7 +250,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         // Fix flickering while rubber banding: Only change the text, if NOT rubber banding.
         if (visibleRect.origin.y >= 0.0f && visibleRect.origin.y <= textView.frame.size.height - visibleRect.size.height) {
-            [[gutterScrollView documentView] setString:lineNumbersString];
+            [[gutterScrollView documentView] setAttributedString:lineNumbersStringM];
         }
         
         // set breakpoint lines
