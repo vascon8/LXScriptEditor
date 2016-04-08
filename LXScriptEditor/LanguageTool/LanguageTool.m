@@ -16,10 +16,26 @@
     NSArray *arr = nil;
     NSString *langStr = [lang lowercaseString];
     
+    NSString *bPath = [[NSBundle mainBundle] bundlePath];
+    
     if ([langStr isEqualToString:@"python"]) {
+        bPath = [bPath stringByAppendingPathComponent:@"Contents/Lib/Java"];
+        if (![libPathArr containsObject:bPath]) {
+            NSMutableArray *arrM = [NSMutableArray arrayWithArray:libPathArr];
+            [arrM addObject:bPath];
+            libPathArr = arrM;
+        }
+        
         arr = [self validatePythonLibPathArr:libPathArr];
     }
     else if ([langStr isEqualToString:@"java"]){
+        bPath = [bPath stringByAppendingPathComponent:@"Contents/Lib/Python"];
+        if (![libPathArr containsObject:bPath]) {
+            NSMutableArray *arrM = [NSMutableArray arrayWithArray:libPathArr];
+            [arrM addObject:bPath];
+            libPathArr = arrM;
+        }
+        
         arr = [self validateJavaLibPath:libPathArr];
 //    ls *.java|xargs egrep "public\s{1,10}[a-zA-Z0-9_-]{1,200}\s{1,10}[a-zA-Z0-9_-]{1,200}\([a-zA-Z0-9, -_]{0,}\)\s{1,10}\{"
 //        ls *.java|xargs egrep -e "public\s{1,10}[a-zA-Z0-9_-]{1,200}\s{1,10}[a-zA-Z0-9_-]{1,200}\([a-zA-Z0-9, -_]{0,}|\n[a-zA-Z0-9 _-]{0,100}\)\s{0,20}\{"|wc -l
@@ -27,6 +43,7 @@
 //        sed -e ":begin; /<<</,/>>>/ { />>>/! { $! { N; b begin }; }; s/<<<.*>>>/COMMENT/; };" test
     }
     
+    NSLog(@"==%@",bPath);
     return arr;
 }
 #pragma mark - validate language

@@ -125,6 +125,10 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 - (void)undoManagerDidUndo:(NSNotification *)aNote;
 - (BOOL)isSyntaxColouringRequired;
 - (NSDictionary *)syntaxDictionary;
+
+@property (retain) NSArray *javaKeyArr;
+@property (retain) NSArray *pythonKeyArr;
+
 @end
 
 @implementation SMLSyntaxColouring
@@ -428,15 +432,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
     //analyse language lib
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
-        NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
-        
-        if (libKeywords && libKeywords.count>1) {
-            NSMutableArray *arrTemp = [NSMutableArray arrayWithArray:libKeywords];
-            for (NSString *str in self.keywordsAndAutocompleteWords) {
-                if(![arrTemp containsObject:str]) [arrTemp addObject:str];
-            }
-            self.keywordsAndAutocompleteWords = [arrTemp sortedArrayUsingSelector:@selector(compare:)];;
-        }
+        [self languageLibCheck];
         
     });
 	
@@ -660,6 +656,42 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 
 //    NSLog(@"==keyword:%@,start:%@,end:%@:",self.keywords,self.keywordStartCharacterSet,self.keywordEndCharacterSet);
 	[self prepareRegularExpressions];
+}
+
+- (void)languageLibCheck
+{
+    NSString *lang = [document valueForKey:MGSFOSyntaxDefinitionName];
+    lang = [lang lowercaseString];
+    NSArray *keyArr = nil;
+    
+    if ([lang isEqualToString:@"java"]) {
+        if (!self.javaKeyArr || self.javaKeyArr.count == 0) {
+            self.javaKeyArr = [LanguageTool analyLanguage:lang libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
+            NSLog(@"==java empty lib");
+        }
+        else{
+            NSLog(@"==java already get lib");
+        }
+        keyArr = self.javaKeyArr;
+    }
+    else if ([lang isEqualToString:@"python"]){
+        if (!self.pythonKeyArr || self.pythonKeyArr.count == 0) {
+            self.pythonKeyArr = [LanguageTool analyLanguage:lang libPathArr:nil];
+            NSLog(@"==python empty lib");
+        }
+        else{
+            NSLog(@"==python already get lib");
+        }
+        keyArr = self.pythonKeyArr;
+    }
+    
+    if (keyArr && keyArr.count>1) {
+        NSMutableArray *arrTemp = [NSMutableArray arrayWithArray:keyArr];
+        for (NSString *str in self.keywordsAndAutocompleteWords) {
+            if(![arrTemp containsObject:str]) [arrTemp addObject:str];
+        }
+        self.keywordsAndAutocompleteWords = [arrTemp sortedArrayUsingSelector:@selector(compare:)];;
+    }
 }
 
 /*
