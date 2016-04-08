@@ -38,7 +38,7 @@
     NSMutableArray *keywordArr = [NSMutableArray array];
     
     if ([self isTaskSuccessfulByRC:output] && libPath && libPath.count>0) {
-        
+    
         for (NSString *path in libPath) {
             BOOL isDir = NO;
             if ([[NSFileManager defaultManager]fileExistsAtPath:path isDirectory:&isDir] && isDir) {

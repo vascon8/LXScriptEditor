@@ -406,17 +406,16 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		[keywordsAndAutocompleteWordsTemporary addObjectsFromArray:value];
 	}
     
-    //analyse language lib
-    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
-    if (libKeywords && libKeywords.count>1) {
-        [keywordsAndAutocompleteWordsTemporary addObjectsFromArray:libKeywords];
-    }
-    
-    NSMutableArray *arrTemp = [NSMutableArray new];
-    for (NSString *str in keywordsAndAutocompleteWordsTemporary) {
-        if(![arrTemp containsObject:str]) [arrTemp addObject:str];
-    }
-    keywordsAndAutocompleteWordsTemporary = arrTemp;
+//    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
+//    if (libKeywords && libKeywords.count>1) {
+//        [keywordsAndAutocompleteWordsTemporary addObjectsFromArray:libKeywords];
+//    }
+//    
+//    NSMutableArray *arrTemp = [NSMutableArray new];
+//    for (NSString *str in keywordsAndAutocompleteWordsTemporary) {
+//        if(![arrTemp containsObject:str]) [arrTemp addObject:str];
+//    }
+//    keywordsAndAutocompleteWordsTemporary = arrTemp;
 	
     // colour autocomplete words is a preference
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsColourAutocomplete] boolValue] == YES) {
@@ -425,6 +424,21 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	
     // keywords and autocomplete words
 	self.keywordsAndAutocompleteWords = [keywordsAndAutocompleteWordsTemporary sortedArrayUsingSelector:@selector(compare:)];
+    
+    //analyse language lib
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
+        
+        if (libKeywords && libKeywords.count>1) {
+            NSMutableArray *arrTemp = [NSMutableArray arrayWithArray:libKeywords];
+            for (NSString *str in self.keywordsAndAutocompleteWords) {
+                if(![arrTemp containsObject:str]) [arrTemp addObject:str];
+            }
+            self.keywordsAndAutocompleteWords = [arrTemp sortedArrayUsingSelector:@selector(compare:)];;
+        }
+        
+    });
 	
     // recolour keywords
     value = [syntaxDictionary valueForKey:SMLSyntaxDefinitionRecolourKeywordIfAlreadyColoured];
