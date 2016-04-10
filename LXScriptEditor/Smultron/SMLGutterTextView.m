@@ -181,7 +181,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
     [lineNumbers updateLineNumbersCheckWidth:NO recolour:NO];
     [self setNeedsDisplay:YES];
 }
-
+- (void)setAttributeStr:(NSAttributedString*)attStr
+{
+    if(!attStr) return;
+    
+    [[self textStorage]setAttributedString:attStr];
+}
 /*
 - (void)drawViewBackgroundInRect:(NSRect)rect
 {

@@ -340,7 +340,7 @@
     NSMutableArray *arrM = [NSMutableArray new];
     NSString *defCommand = @"ls *.py|grep -v __*.py|xargs egrep \"^ {0,}def \"|grep -v \"def _\"";
     NSString *defOutput = [self runTaskInUserShellWithCommand:defCommand currentPath:dir];
-    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
+//    NSLog(@"dir:%@ ==defOut:%@\n",dir,defOutput);
     [arrM addObjectsFromArray:[self analyDefOutput:defOutput prefix:nil]];
     
     NSString *classCommand = @"ls *.py|grep -v __*.py|xargs egrep -H \"^ {0,}class \"|grep -v \"class _\"";

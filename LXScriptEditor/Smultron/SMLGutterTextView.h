@@ -31,4 +31,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 @property (nonatomic,copy) NSString* fileName;
 @property (nonatomic,retain) NSArray* breakpointLines;
 
+- (void)setAttributeStr:(NSAttributedString*)attStr;
+
 @end

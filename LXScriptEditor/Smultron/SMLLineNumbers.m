@@ -189,16 +189,26 @@ Unless required by applicable law or agreed to in writing, software distributed 
             NSRange selectedR = [layoutManager.textViewForBeginningOfSelection selectedRange];
             
             
+            NSFont *font = textView.font;
+            
+            SMLGutterTextView *gutterTV = [gutterScrollView documentView];
+            NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
+            
             // wrap or not
             if (idx == indexNonWrap) {
                 lineNumber++;
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
-                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li ha\n", (long)lineNumber] attributes:nil]];
                  
                 if ([textString lineRangeForRange:selectedR].location == idx) {
                     NSLog(@"==selected:%ld",lineNumber);
+                    [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
+                    [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
+                    [dictM setValue:[NSFont boldSystemFontOfSize:font.pointSize] forKey:NSFontAttributeName];
+                    
                     //                    NSLog(@"indexWrp:%ld, visRange:%ld %@ , max:%ld",indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
                 }
+                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li\n", (long)lineNumber] attributes:dictM]];
+                
                 textLine++;
                 
                 // flag breakpoints
@@ -208,6 +218,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
                 }
             } else {
 //                [lineNumbersString appendFormat:@"%C\n", (unsigned short)0x00B7];
+                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%C\n", (unsigned short)0x00B7] attributes:dictM]];
+                
                 indexNonWrap = idx;
                 textLine++;
             }
@@ -228,7 +240,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         // check width is okay
         if (checkWidth == YES) {
-            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
+//            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
+            NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
             
             if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
                 [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
@@ -250,7 +263,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         // Fix flickering while rubber banding: Only change the text, if NOT rubber banding.
         if (visibleRect.origin.y >= 0.0f && visibleRect.origin.y <= textView.frame.size.height - visibleRect.size.height) {
-            [[gutterScrollView documentView] setAttributedString:lineNumbersStringM];
+            [[gutterScrollView documentView] setAttributeStr:lineNumbersStringM];
+//            NSLog(@"==view:%@",gutterScrollView.documentView);
         }
         
         // set breakpoint lines
