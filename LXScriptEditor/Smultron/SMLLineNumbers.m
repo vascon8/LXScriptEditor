@@ -165,7 +165,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
         
         for (idx = 0, lineNumber = 0; idx < (NSInteger)visibleRange.location; lineNumber++) {
             idx = NSMaxRange([searchString lineRangeForRange:NSMakeRange(idx, 0)]);
-            NSLog(@"==searchstr:%@ idx:%ld number:%ld",searchString,idx,lineNumber);
         }
         
         NSInteger indexNonWrap = [searchString lineRangeForRange:NSMakeRange(idx, 0)].location;
@@ -186,27 +185,27 @@ Unless required by applicable law or agreed to in writing, software distributed 
         // generate line number string
         while (indexNonWrap <= maxRangeVisibleRange)
         {
-            NSRange selectedR = [layoutManager.textViewForBeginningOfSelection selectedRange];
-            
-            
+            NSRange selectedR = [textView selectedRange];
             NSFont *font = textView.font;
             
             SMLGutterTextView *gutterTV = [gutterScrollView documentView];
             NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
+            
+//            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
             
             // wrap or not
             if (idx == indexNonWrap) {
                 lineNumber++;
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
                  
-                if ([textString lineRangeForRange:selectedR].location == idx) {
-                    NSLog(@"==selected:%ld",lineNumber);
+                if ([textString lineRangeForRange:selectedR].location <= idx && idx < NSMaxRange(selectedR)) {
                     [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
                     [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
                     [dictM setValue:[NSFont boldSystemFontOfSize:font.pointSize] forKey:NSFontAttributeName];
                     
-                    //                    NSLog(@"indexWrp:%ld, visRange:%ld %@ , max:%ld",indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
+//                    NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%ld",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
                 }
+                
                 [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li\n", (long)lineNumber] attributes:dictM]];
                 
                 textLine++;

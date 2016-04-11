@@ -213,7 +213,9 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		self.attributesCharacterSet = [temporaryCharacterSet copy];
 		
 		// configure syntax definition
-		[self applySyntaxDefinition];
+        [self applySyntaxDefinition];
+        [self removeAllColours];
+        [self pageRecolour];
 		
 		// add undo notification observers
 		[[NSNotificationCenter defaultCenter] addObserver:self 
@@ -226,7 +228,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 //													 name:@"NSUndoManagerWillUndoChangeNotification"
 //												   object:undoManager];
 		// add document KVO observers
-		[document addObserver:self forKeyPath:@"syntaxDefinition" options:NSKeyValueObservingOptionNew context:@"syntaxDefinition"];
+		[document addObserver:self forKeyPath:@"syntaxDefinition" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:@"syntaxDefinition"];
 		
 		// add NSUserDefaultsController KVO observers
 		NSUserDefaultsController *defaultsController = [NSUserDefaultsController sharedUserDefaultsController];
@@ -286,9 +288,12 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		[self prepareRegularExpressions];
 		[self pageRecolour];
 	} else if ([(__bridge NSString *)context isEqualToString:@"syntaxDefinition"]) {
-		[self applySyntaxDefinition];
-		[self removeAllColours];
-		[self pageRecolour];
+        
+        if (![[change valueForKey:@"new"] isEqualToString:[change valueForKey:@"old"]]) {
+            [self applySyntaxDefinition];
+            [self removeAllColours];
+            [self pageRecolour];
+        }
 	} else {
 		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 	}
@@ -304,7 +309,8 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  
  */
 - (void)applySyntaxDefinition
-{			
+{
+    NSLog(@"==apply SyntaxDef==");
 	// parse
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self parseSyntaxDictionary:self.syntaxDictionary];
@@ -409,17 +415,6 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		self.autocompleteWords = [[NSSet alloc] initWithArray:value];
 		[keywordsAndAutocompleteWordsTemporary addObjectsFromArray:value];
 	}
-    
-//    NSArray *libKeywords = [LanguageTool analyLanguage:[document valueForKey:MGSFOSyntaxDefinitionName] libPathArr:@[@"/Users/xinliu/Library/Developer/Xcode/DerivedData/TestWa-fbxafziiacmvesairweysahdwhtd/Build/Products/Debug/TestWa.app/Contents/Lib/Java",@"/a/b/c"]];
-//    if (libKeywords && libKeywords.count>1) {
-//        [keywordsAndAutocompleteWordsTemporary addObjectsFromArray:libKeywords];
-//    }
-//    
-//    NSMutableArray *arrTemp = [NSMutableArray new];
-//    for (NSString *str in keywordsAndAutocompleteWordsTemporary) {
-//        if(![arrTemp containsObject:str]) [arrTemp addObject:str];
-//    }
-//    keywordsAndAutocompleteWordsTemporary = arrTemp;
 	
     // colour autocomplete words is a preference
 	if ([[SMLDefaults valueForKey:MGSFragariaPrefsColourAutocomplete] boolValue] == YES) {
