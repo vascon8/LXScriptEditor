@@ -192,13 +192,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
             NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
             
 //            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
+//            NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%@",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSStringFromRange(([textString lineRangeForRange:selectedR])));
             
+            //idx begining of every line
+            //indexNonWrap line range
             // wrap or not
             if (idx == indexNonWrap) {
                 lineNumber++;
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
                  
-                if ([textString lineRangeForRange:selectedR].location <= idx && idx < NSMaxRange(selectedR)) {
+                if ([textString lineRangeForRange:selectedR].location <= idx && idx <= NSMaxRange(selectedR)) {
                     [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
                     [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
                     [dictM setValue:[NSFont boldSystemFontOfSize:font.pointSize] forKey:NSFontAttributeName];

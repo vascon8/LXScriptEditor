@@ -1381,7 +1381,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
             scanRange.length = storage.length - scanRange.location;
             
             [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanRange options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-                if (value) {
+                if (range.location && [self validateComment:range] && value) {
 //                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
                     [self scrollRangeToVisible:range];
@@ -1396,7 +1396,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
             else scanR = NSMakeRange(0, self.selectedRange.location+self.selectedRange.length);
             
             [storage enumerateAttribute:NSAttachmentAttributeName inRange:scanR	 options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(id value, NSRange range, BOOL *stop) {
-                if (value) {
+                if (range.location && [self validateComment:range] && value) {
 //                    NSLog(@"range:%@,va:%@",NSStringFromRange(range),value);
                     [self setSelectedRange:range];
                     [self scrollRangeToVisible:range];
@@ -1413,7 +1413,24 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
         [super keyDown:theEvent];
     }
 }
-
+- (BOOL)validateComment:(NSRange)tokenRange
+{
+    BOOL validate = YES;
+    
+    NSRange lineRange = [self.textStorage.string lineRangeForRange:tokenRange];
+    NSRange checkRange = NSMakeRange(lineRange.location, tokenRange.location-lineRange.location);
+    
+//    NSLog(@"==range:%@",NSStringFromRange(checkRange));
+    if (checkRange.location != NSNotFound) {
+        NSString *commentString = [[SMLCurrentDocument valueForKey:ro_MGSFOSyntaxColouring] valueForKey:@"firstSingleLineComment"];
+        NSString *restStr = [self.textStorage.string substringWithRange:checkRange];
+        NSRange commentR = [restStr rangeOfString:commentString];
+//        NSLog(@"==reststr:%@,comm:%@",restStr,commentString);
+        if(commentR.location != NSNotFound) validate = NO;
+    }
+    
+    return validate;
+}
 //- (void)deleteBackward:(id)sender
 //{
 //    NSRange selectedRange = self.selectedRange;
