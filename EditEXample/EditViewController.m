@@ -44,7 +44,7 @@
         [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsIndentNewLinesAutomatically];
         
         
-        //        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithInteger:24] forKey:MGSFragariaPrefsGutterWidth];
+        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithInteger:26] forKey:MGSFragariaPrefsGutterWidth];
         
         self.menuController = self.fragaria.textMenuController;
         

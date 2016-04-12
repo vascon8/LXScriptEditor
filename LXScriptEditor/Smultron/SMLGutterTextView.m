@@ -88,7 +88,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
                                          nil]];
         }
         
-		[self setFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
+        NSFont *font = [NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]];
+		[self setFont:font];
+        
 		[self setTextColor:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsGutterTextColourWell]]];
 		[self setInsertionPointColor:[NSColor textColor]];
 
@@ -110,7 +112,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
 	if ([(__bridge NSString *)context isEqualToString:@"TextFontChanged"]) {
-		[self setFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
+        NSFont *font = [NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]];
+
+//        CGFloat W = (font.pointSize + 2.0 ) * 2.0;
+//        [[self textContainer] setContainerSize:NSMakeSize(W, FLT_MAX)];
+        
+		[self setFont:font];
 	} else {
 		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 	}

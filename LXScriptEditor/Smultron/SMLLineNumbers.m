@@ -186,10 +186,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
         while (indexNonWrap <= maxRangeVisibleRange)
         {
             NSRange selectedR = [textView selectedRange];
-            NSFont *font = textView.font;
             
             SMLGutterTextView *gutterTV = [gutterScrollView documentView];
             NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
+            NSFont *font = gutterTV.font;
+            
+//            NSLog(@"==fontS:%f,bounds:%@,containS:%@",font.pointSize,NSStringFromRect(gutterTV.frame),NSStringFromSize(gutterTV.textContainer.containerSize));
             
 //            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
 //            NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%@",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSStringFromRange(([textString lineRangeForRange:selectedR])));
@@ -200,9 +202,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
             if (idx == indexNonWrap) {
                 lineNumber++;
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
-                 
-                if ([textString lineRangeForRange:selectedR].location <= idx && idx <= NSMaxRange(selectedR)) {
-                    [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
+                NSRange lineR = [textString lineRangeForRange:selectedR];
+                if (lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) {
+                    [dictM setValue:[NSNumber numberWithInteger:1] forKey:NSUnderlineStyleAttributeName];
                     [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
                     [dictM setValue:[NSFont boldSystemFontOfSize:font.pointSize] forKey:NSFontAttributeName];
                     
