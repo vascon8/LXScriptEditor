@@ -182,15 +182,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
         int textLine = 0;
         NSMutableArray* textLineBreakpoints = [NSMutableArray array];
         
+        NSRange selectedR = [textView selectedRange];
+        
+        SMLGutterTextView *gutterTV = [gutterScrollView documentView];
+        
+        NSFont *font = gutterTV.font;
+        NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:font toHaveTrait:NSBoldFontMask];
+        
         // generate line number string
         while (indexNonWrap <= maxRangeVisibleRange)
         {
-            NSRange selectedR = [textView selectedRange];
-            
-            SMLGutterTextView *gutterTV = [gutterScrollView documentView];
             NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
-            NSFont *font = gutterTV.font;
-            
 //            NSLog(@"==fontS:%f,bounds:%@,containS:%@",font.pointSize,NSStringFromRect(gutterTV.frame),NSStringFromSize(gutterTV.textContainer.containerSize));
             
 //            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
@@ -203,10 +205,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
                 lineNumber++;
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
                 NSRange lineR = [textString lineRangeForRange:selectedR];
-                if (lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) {
+                if ((lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) || (lineR.length == 0 && indexNonWrap == NSMaxRange(lineR))) {
                     [dictM setValue:[NSNumber numberWithInteger:1] forKey:NSUnderlineStyleAttributeName];
                     [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
-                    [dictM setValue:[NSFont boldSystemFontOfSize:font.pointSize] forKey:NSFontAttributeName];
+                    
+                    [dictM setValue:boldFont forKey:NSFontAttributeName];
                     
 //                    NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%ld",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
                 }
@@ -243,23 +246,43 @@ Unless required by applicable law or agreed to in writing, software distributed 
         }
         
         // check width is okay
-        if (checkWidth == YES) {
-//            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
-            NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
+        NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
+        NSInteger widthOfGutter = [[document valueForKey:MGSFOGutterWidth] integerValue];
+        NSInteger bold = (int)boldFont.pointSize;
+        
+        if (((widthOfStringInGutter+bold) > widthOfGutter) || ((widthOfGutter > (widthOfStringInGutter+2*bold)) && widthOfGutter > (24+bold))) {
+            NSLog(@"==changed:%ld",(widthOfStringInGutter+bold));
+            [document setValue:[NSNumber numberWithInteger:(widthOfStringInGutter+bold)] forKey:MGSFOGutterWidth];
             
-            if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
-                [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
-                if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
-                    gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
-                } else {
-                    gutterWidth = 0;
-                }
-                currentViewBounds = [[gutterScrollView superview] bounds];
-                [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
-                
-                [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
+            if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
+                gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
+            } else {
+                gutterWidth = 0;
             }
+            
+            currentViewBounds = [[gutterScrollView superview] bounds];
+            [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
+            
+            [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
         }
+        
+//        if (checkWidth == YES) {
+////            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
+//            NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
+//            
+//            if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
+//                [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
+//                if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
+//                    gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
+//                } else {
+//                    gutterWidth = 0;
+//                }
+//                currentViewBounds = [[gutterScrollView superview] bounds];
+//                [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
+//                
+//                [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
+//            }
+//        }
         
         if (recolour == YES) {
             [[document valueForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:textView];
