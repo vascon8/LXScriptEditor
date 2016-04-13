@@ -23,6 +23,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "MGSFragaria.h"
 #import "MGSFragariaFramework.h"
 
+@interface SMLGutterTextView ()
+@property  NSTimer *draggingTimer;
+@end
+
 @implementation SMLGutterTextView
 
 @synthesize fileName, breakpointLines;
@@ -186,7 +190,29 @@ Unless required by applicable law or agreed to in writing, software distributed 
     SMLLineNumbers* lineNumbers = [[MGSFragaria currentInstance] objectForKey:ro_MGSFOLineNumbers];
     
     [lineNumbers updateLineNumbersCheckWidth:NO recolour:NO];
+    
     [self setNeedsDisplay:YES];
+    
+    //for select line
+    // get start point
+    NSPoint point = [[self window] convertRectToScreen:NSMakeRect([theEvent locationInWindow].x,
+                                                                  [theEvent locationInWindow].y, 0, 0)].origin;
+    NSUInteger index = [self characterIndexForPoint:point];
+    
+    [self selectLines:nil];  // for single click event
+    
+    // repeat while dragging
+    [self setDraggingTimer:[NSTimer scheduledTimerWithTimeInterval:0.05
+                                                            target:self
+                                                          selector:@selector(selectLines:)
+                                                          userInfo:@(index)
+                                                           repeats:YES]];
+}
+- (void)mouseUp:(NSEvent *)theEvent
+// ------------------------------------------------------
+{
+    [[self draggingTimer] invalidate];
+    [self setDraggingTimer:nil];
 }
 - (void)setAttributeStr:(NSAttributedString*)attStr
 {
@@ -231,5 +257,53 @@ Unless required by applicable law or agreed to in writing, software distributed 
 {
 	return YES;
 }
-
+#pragma mark - select line
+- (void)selectLines:(NSTimer *)timer
+// ------------------------------------------------------
+{
+    if(!timer) return;
+    
+    NSTextView *textView = [[MGSFragaria currentInstance] objectForKey:ro_MGSFOTextView];
+    NSPoint point = [NSEvent mouseLocation];  // screen based point
+    
+    // scroll text view if needed
+    CGFloat y = [self convertPoint:[[self window] convertRectFromScreen:NSMakeRect(point.x, point.y, 0, 0)].origin
+                          fromView:nil].y;
+    if (y < 0) {
+        [textView scrollLineUp:nil];
+    } else if (y > NSHeight([self bounds])) {
+        [textView scrollLineDown:nil];
+    }
+    
+    // select lines
+    NSUInteger currentIndex = [textView characterIndexForPoint:point];
+//    NSUInteger clickedIndex = timer ? [[timer userInfo] unsignedIntegerValue] : currentIndex;
+     NSUInteger clickedIndex = currentIndex;
+    NSRange currentLineRange = [[textView string] lineRangeForRange:NSMakeRange(currentIndex, 0)];
+    NSRange clickedLineRange = [[textView string] lineRangeForRange:NSMakeRange(clickedIndex, 0)];
+    NSRange range = NSUnionRange(currentLineRange, clickedLineRange);
+    
+//    NSLog(@"==curr:%ld,click:%ld,currR:%@,clickR:%@,Range:%@",currentIndex,clickedIndex,NSStringFromRange(currentLineRange),NSStringFromRange(clickedLineRange),NSStringFromRange(range));
+//    NSLog(@"==timer:%@",timer);
+    
+    // with Shift key
+    if ([NSEvent modifierFlags] & NSShiftKeyMask) {
+        NSRange selectedRange = [textView selectedRange];
+        if (NSLocationInRange(currentIndex, selectedRange)) {  // reduce
+            BOOL inUpperSection = (currentIndex - selectedRange.location) < selectedRange.length / 2;
+            if (inUpperSection) {  // clicked upper half section of selected range
+                range = NSMakeRange(currentIndex, NSMaxRange(selectedRange) - currentIndex);
+                
+            } else {
+                range = selectedRange;
+                range.length -= NSMaxRange(selectedRange) - NSMaxRange(currentLineRange);
+            }
+            
+        } else {  // expand
+            range = NSUnionRange(range, selectedRange);
+        }
+    }
+//    NSLog(@"==range:%@",NSStringFromRange(range));
+    [textView setSelectedRange:range];
+}
 @end
