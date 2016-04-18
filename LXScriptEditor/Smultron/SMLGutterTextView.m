@@ -22,6 +22,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 #import "MGSFragaria.h"
 #import "MGSFragariaFramework.h"
+#import "SMLTextView.h"
+#import "LXTypeSetter.h"
 
 @interface SMLGutterTextView ()
 @property  NSTimer *draggingTimer;
@@ -42,6 +44,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 {
 	if ((self = [super initWithFrame:frame])) {
         
+        [self.textContainer replaceLayoutManager:[LXGutterLayoutManager new]];
+        
         imgBreakpoint0 = [MGSFragaria imageNamed:@"editor-breakpoint-0.png"];
         [imgBreakpoint0 setFlipped:YES];
 
@@ -61,36 +65,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 		[self setAlignment:NSRightTextAlignment];
 		[self setEditable:NO];
 		[self setSelectable:NO];
+        
 		[[self textContainer] setContainerSize:NSMakeSize([[SMLDefaults valueForKey:MGSFragariaPrefsGutterWidth] integerValue], FLT_MAX)];
+        
 		[self setVerticallyResizable:YES];
 		[self setHorizontallyResizable:YES];
 		[self setAutoresizingMask:NSViewHeightSizable];
-		
-        // TODO:
-        if (NO) {
-            /* vlidholt/fragaria adopts this approach to try and improve line number accuracy.
-             
-              Not sure if this the answer to the EOF line number alignment issue.
-             
-              These settings would need to respond to changes in font / size and be replicated in the SMLTextView.
-             
-              Think about it.
-             
-              The issue may be more to do with positioning the gutter scrcoll view.
-              Does line wrapping make the issue worse?
-             
-             */
-            NSMutableParagraphStyle * style = [[NSMutableParagraphStyle alloc] init];
-            [style setAlignment:NSRightTextAlignment];
-            [style setLineSpacing:1.0];
-            [style setMinimumLineHeight:11.0];
-            [style setMaximumLineHeight:11.0];
-            [self setDefaultParagraphStyle:style];
-            
-            [self  setTypingAttributes: [NSDictionary dictionaryWithObjectsAndKeys:
-                                         [self defaultParagraphStyle], NSParagraphStyleAttributeName,
-                                         nil]];
-        }
         
         NSFont *font = [NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]];
 		[self setFont:font];
@@ -102,10 +82,50 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 		NSUserDefaultsController *defaultsController = [NSUserDefaultsController sharedUserDefaultsController];
 		[defaultsController addObserver:self forKeyPath:@"values.FragariaTextFont" options:NSKeyValueObservingOptionNew context:@"TextFontChanged"];
+        
+        // TODO:
+        //        if (NO) {
+        /* vlidholt/fragaria adopts this approach to try and improve line number accuracy.
+         
+         Not sure if this the answer to the EOF line number alignment issue.
+         
+         These settings would need to respond to changes in font / size and be replicated in the SMLTextView.
+         
+         Think about it.
+         
+         The issue may be more to do with positioning the gutter scrcoll view.
+         Does line wrapping make the issue worse?
+         
+         */
+        NSMutableParagraphStyle * style = [self.defaultParagraphStyle mutableCopy];
+        [style setAlignment:NSRightTextAlignment];
+        
+//        CGFloat fontH = self.font.pointSize;
+//        CGFloat H = textView.lineSpacing + fontH;
+
+//        [style setLineHeightMultiple:4.0];
+//        [style setMinimumLineHeight:11.0];
+//        [style setMaximumLineHeight:100.0];
+        //            [style setMinimumLineHeight:11.0];
+        //            [style setMaximumLineHeight:11.0];
+        
+        [self setDefaultParagraphStyle:style];
+        
+//        NSLog(@"==h:%f,spac:%f",[self.layoutManager defaultLineHeightForFont:self.font],self.lineSpacing);
+        
+//        [self  setTypingAttributes: [NSDictionary dictionaryWithObjectsAndKeys:
+//                                     [self defaultParagraphStyle], NSParagraphStyleAttributeName,
+//                                     nil]];
+        //        }
 	}
 	return self;
 }
-
+- (CGFloat)lineSpacing
+{
+    SMLTextView *textView = [[MGSFragaria currentInstance] objectForKey:ro_MGSFOTextView];
+//    self.lineSpacing = textView.lineSpacing;
+    return textView.lineSpacing;
+}
 #pragma mark -
 #pragma mark KVO
 /*
@@ -306,4 +326,36 @@ Unless required by applicable law or agreed to in writing, software distributed 
 //    NSLog(@"==range:%@",NSStringFromRange(range));
     [textView setSelectedRange:range];
 }
+@end
+
+
+
+
+@implementation LXGutterLayoutManager
+- (id)init{
+    if (self = [super init]) {
+        [self setTypesetter:[LXTypeSetter new]];
+    }
+    return self;
+}
+- (void)setLineFragmentRect:(NSRect)fragmentRect forGlyphRange:(NSRange)glyphRange usedRect:(NSRect)usedRect
+{
+    CGFloat lineSpacing = [(SMLGutterTextView*)[self firstTextView] lineSpacing];
+    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+    usedRect.origin.y = Y;
+    
+//    NSLog(@"==usedR:%@,spac:%f",NSStringFromRect(usedRect),lineSpacing);
+    
+    [super setLineFragmentRect:fragmentRect forGlyphRange:glyphRange usedRect:usedRect];
+}
+
+- (void)setExtraLineFragmentRect:(NSRect)fragmentRect usedRect:(NSRect)usedRect textContainer:(NSTextContainer *)container
+{
+    CGFloat lineSpacing = [(SMLGutterTextView*)[self firstTextView] lineSpacing];
+    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+    usedRect.origin.y = Y;
+    
+    [super setExtraLineFragmentRect:fragmentRect usedRect:usedRect textContainer:container];
+}
+
 @end

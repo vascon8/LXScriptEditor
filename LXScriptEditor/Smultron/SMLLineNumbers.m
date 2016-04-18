@@ -189,6 +189,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
         NSFont *font = gutterTV.font;
         NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:font toHaveTrait:NSBoldFontMask];
         
+        NSLog(@"==gV:%@,tV:%@",NSStringFromRect(gutterTV.frame),NSStringFromRect(textView.frame));
+        
         // generate line number string
         while (indexNonWrap <= maxRangeVisibleRange)
         {
@@ -206,7 +208,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 //                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
                 NSRange lineR = [textString lineRangeForRange:selectedR];
                 if ((lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) || (lineR.length == 0 && indexNonWrap == NSMaxRange(lineR))) {
-                    [dictM setValue:[NSNumber numberWithInteger:1] forKey:NSUnderlineStyleAttributeName];
+                    [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
                     [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
                     
                     [dictM setValue:boldFont forKey:NSFontAttributeName];

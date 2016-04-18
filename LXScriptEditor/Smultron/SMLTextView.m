@@ -146,6 +146,17 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 	[defaultsController addObserver:self forKeyPath:@"values.FragariaSmartInsertDelete" options:NSKeyValueObservingOptionNew context:@"SmartInsertDeleteChanged"];
 	
 	lineHeight = [[[self textContainer] layoutManager] defaultLineHeightForFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
+    
+    self.lineSpacing = self.font.pointSize / 2.0 * 0.618;
+    
+//    NSScrollView *guttScrollView = [fragaria valueForKey:ro_MGSFOGutterScrollView];
+//    SMLGutterTextView *guttView = guttScrollView.documentView;
+//    guttView.lineSpacing = self.lineSpacing;
+//    [defaultsController addObserver:self forKeyPath:@"lineSpacing" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:@"lineSpacingChanged"];
+    
+//    NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+//    [style setLineSpacing:10.0];
+//    [self setDefaultParagraphStyle:style];
 }
 
 /*

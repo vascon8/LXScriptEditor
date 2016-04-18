@@ -20,6 +20,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 #import "MGSFragariaFramework.h"
 #import "SMLLayoutManager.h"
+#import "LXTypeSetter.h"
 
 typedef enum {
     kTabLine = 0,
@@ -74,7 +75,9 @@ typedef enum {
         if (useGlyphSubstitutionForInvisibleGlyphs) {
             [self setGlyphGenerator:[[MGSGlyphGenerator alloc] init]];
         }
-
+        
+        [self setUsesScreenFonts:YES];
+        [self setTypesetter:[[LXTypeSetter alloc]init]];
 	}
 	return self;
 }
@@ -407,5 +410,35 @@ forStartingGlyphAtIndex:(NSUInteger)glyphIndex
         }
         [layoutManager getGlyphs:invisibleGlyphs range:NSMakeRange(0, [glyphString length])];
     }
+}
+#pragma mark - line height
+- (CGFloat)lineHeight
+{
+    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
+    
+//    return round([self defaultLineHeightForTextFont] + lineSpacing * [[self textFont] pointSize]);
+    return lineSpacing+ self.textStorage.font.pointSize ;
+}
+- (void)setLineFragmentRect:(NSRect)fragmentRect forGlyphRange:(NSRange)glyphRange usedRect:(NSRect)usedRect
+{
+//    NSLog(@"==framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
+    
+    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
+    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+    usedRect.origin.y = Y;
+    
+//    NSLog(@"==after framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
+    
+    [super setLineFragmentRect:fragmentRect forGlyphRange:glyphRange usedRect:usedRect];
+}
+
+- (void)setExtraLineFragmentRect:(NSRect)fragmentRect usedRect:(NSRect)usedRect textContainer:(NSTextContainer *)container
+{
+//    NSLog(@"==extra framRect:%@,usedR:%@",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect));
+    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
+    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+    usedRect.origin.y = Y;
+    
+    [super setExtraLineFragmentRect:fragmentRect usedRect:usedRect textContainer:container];
 }
 @end

@@ -33,4 +33,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 - (void)setAttributeStr:(NSAttributedString*)attStr;
 
+@property (readonly) CGFloat lineSpacing;
+@end
+
+
+
+@interface LXGutterLayoutManager : NSLayoutManager
+
 @end

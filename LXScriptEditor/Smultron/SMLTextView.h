@@ -62,4 +62,6 @@ NSString  *LXMarkupPboardType ;
 
 //only show auto complete matchs when insert
 //@property BOOL isInsertCharacter;
+
+@property CGFloat lineSpacing;
 @end
