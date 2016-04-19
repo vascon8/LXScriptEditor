@@ -64,4 +64,5 @@ NSString  *LXMarkupPboardType ;
 //@property BOOL isInsertCharacter;
 
 @property CGFloat lineSpacing;
+- (void)pageRecolor;
 @end

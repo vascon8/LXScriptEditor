@@ -9,7 +9,6 @@
 #import <Cocoa/Cocoa.h>
 
 @interface LXRulerView : NSRulerView
-
 @end
 
 

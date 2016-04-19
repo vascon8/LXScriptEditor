@@ -542,6 +542,8 @@ static CGFontRef BoldLineNumberFont;
         requiredThickness = MAX(length * charWidth + 3 * kLineNumberPadding, kMinVerticalThickness);
     }
     [self setRuleThickness:ceil(requiredThickness)];
+    
+    [(SMLTextView*)[self textView] pageRecolor];
 }
 
 

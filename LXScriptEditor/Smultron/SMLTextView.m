@@ -1612,5 +1612,9 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     NSEnableScreenUpdates();
     
 }
-
+#pragma mark - recolor
+- (void)pageRecolor
+{
+    [[fragaria objectForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:self];
+}
 @end
