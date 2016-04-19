@@ -149,6 +149,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 	lineHeight = [[[self textContainer] layoutManager] defaultLineHeightForFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
     
     self.lineSpacing = self.font.pointSize / 2.0 * 0.618;
+//    self.lineSpacing = 15;
     
 //    NSScrollView *guttScrollView = [fragaria valueForKey:ro_MGSFOGutterScrollView];
 //    SMLGutterTextView *guttView = guttScrollView.documentView;

@@ -475,6 +475,8 @@ static CGFontRef BoldLineNumberFont;
             NSRange range;
             NSRect lineRect = [layoutManager lineFragmentRectForGlyphAtIndex:glyphCount effectiveRange:&range withoutAdditionalLayout:YES];
             CGFloat y = -NSMinY(lineRect);
+            //adjust line spacing
+            y -= [(SMLTextView*)[self textView] lineSpacing]/2.0;
             
             if (lastLineNumber == lineNumber) {  // wrapped line
                 if (!isVerticalText) {

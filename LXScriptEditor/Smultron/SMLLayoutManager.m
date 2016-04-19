@@ -419,26 +419,42 @@ forStartingGlyphAtIndex:(NSUInteger)glyphIndex
 //    return round([self defaultLineHeightForTextFont] + lineSpacing * [[self textFont] pointSize]);
     return lineSpacing+ self.textStorage.font.pointSize ;
 }
-- (void)setLineFragmentRect:(NSRect)fragmentRect forGlyphRange:(NSRange)glyphRange usedRect:(NSRect)usedRect
-{
-//    NSLog(@"==framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
-    
-    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
-    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
-    usedRect.origin.y = Y;
-    
-//    NSLog(@"==after framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
-    
-    [super setLineFragmentRect:fragmentRect forGlyphRange:glyphRange usedRect:usedRect];
-}
+//- (void)setLineFragmentRect:(NSRect)fragmentRect forGlyphRange:(NSRange)glyphRange usedRect:(NSRect)usedRect
+//{
+////    NSLog(@"==framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
+//    
+//    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
+//    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+//    CGFloat H = [(SMLTextView*)[self firstTextView] font].pointSize + lineSpacing;
+//    
+//    fragmentRect.size.height = self.lineHeight;
+//    usedRect.size.height = self.lineHeight;
+//    usedRect.origin.y = Y;
+//    fragmentRect.origin.y = Y;
+//    
+////    NSLog(@"==after framRect:%@,usedR:%@,defH:%f,defBas:%f",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect),[self defaultLineHeightForFont:self.textStorage.font],[self defaultBaselineOffsetForFont:self.textStorage.font]);
+//    
+//    [super setLineFragmentRect:fragmentRect forGlyphRange:glyphRange usedRect:usedRect];
+//}
 
-- (void)setExtraLineFragmentRect:(NSRect)fragmentRect usedRect:(NSRect)usedRect textContainer:(NSTextContainer *)container
+//- (void)setExtraLineFragmentRect:(NSRect)fragmentRect usedRect:(NSRect)usedRect textContainer:(NSTextContainer *)container
+//{
+////    NSLog(@"==extra framRect:%@,usedR:%@",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect));
+//    CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
+//    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
+//    usedRect.origin.y = Y;
+//    
+//    [super setExtraLineFragmentRect:fragmentRect usedRect:usedRect textContainer:container];
+//}
+
+//adjust line spacing
+- (NSPoint)locationForGlyphAtIndex:(NSUInteger)glyphIndex
 {
-//    NSLog(@"==extra framRect:%@,usedR:%@",NSStringFromRect(fragmentRect),NSStringFromRect(usedRect));
     CGFloat lineSpacing = [(SMLTextView*)[self firstTextView] lineSpacing];
-    CGFloat Y = usedRect.origin.y - lineSpacing/2.0;
-    usedRect.origin.y = Y;
+    NSPoint outPoint = [super locationForGlyphAtIndex:glyphIndex];
+    CGFloat Y = outPoint.y + lineSpacing/2.0;
     
-    [super setExtraLineFragmentRect:fragmentRect usedRect:usedRect textContainer:container];
+	outPoint.y = Y;
+	return outPoint;
 }
 @end
