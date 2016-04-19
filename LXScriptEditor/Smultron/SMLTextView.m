@@ -23,6 +23,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "SMLAutoCompleteDelegate.h"
 
 #import "LXTextAttachment.h"
+#import "LXEditScrollView.h"
 
 NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 
@@ -180,7 +181,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 - (void)setFrame:(NSRect)rect
 {
 	[super setFrame:rect];
-	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
+//	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
 	
 }
 
@@ -285,7 +286,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 	if ([(__bridge NSString *)context isEqualToString:@"TextFontChanged"]) {
 		[self setFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
 		lineHeight = [[[self textContainer] layoutManager] defaultLineHeightForFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
-		[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
+//		[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
 		[self setPageGuideValues];
 	} else if ([(__bridge NSString *)context isEqualToString:@"TextColourChanged"]) {
 		[self setTextColor:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextColourWell]]];
@@ -688,7 +689,11 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 {
 //    NSLog(@"===setstring=");
 	[super setString:aString];
-	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
+//	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
+    
+    [self didChangeText];
+    
+//    [(LXEditScrollView*)[self enclosingScrollView] invalidateLineNumber];
 }
 
 /*
@@ -753,7 +758,10 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     NSLog(@"==setAttrstr==");
     NSTextStorage *textStorage = [self textStorage];
     [textStorage setAttributedString:text];
-    [[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
+    
+//    [[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
+    
+    [self didChangeText];
 }
 
 /*
@@ -1593,7 +1601,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 	[[self layoutManager] textContainerChangedGeometry:textContainer];
 
     // redraw the line numbers
-    [[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
+//    [[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
 
     // redraw the display and reposition scrollers
     NSDisableScreenUpdates();

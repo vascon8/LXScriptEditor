@@ -385,7 +385,7 @@ static id sharedInstance = nil;
 		if ([[SMLCurrentDocument valueForKey:MGSFOIsEdited] boolValue] == NO) {
 			[self setEdited: YES];
 		}
-		[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
+//		[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
 	}
 	
 	if ([updatedSelectionsArray count] > 0) {
@@ -483,7 +483,7 @@ static id sharedInstance = nil;
 	
 	[self setEdited:YES];
 	
-	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
+//	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
 	
 	if ([updatedSelectionsArray count] > 0) {
 		[textView setSelectedRanges:updatedSelectionsArray];
@@ -585,7 +585,7 @@ static id sharedInstance = nil;
 		NSBeep();
 	} else {
 		[self setEdited:YES];
-		[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
+//		[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
 	}
 	
 	if ([updatedSelectionsArray count] > 0) {
@@ -1100,7 +1100,7 @@ static id sharedInstance = nil;
 	
 	[self setEdited:YES];
 	
-	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
+//	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
 	
 	if (selectedRange.length > 0) {
 		[textView setSelectedRanges:updatedSelectionsArray];
@@ -1144,7 +1144,7 @@ static id sharedInstance = nil;
 	[[SMLCurrentDocument valueForKey:ro_MGSFOSyntaxColouring] setReactToChanges:YES];
 	
 	[self setEdited:YES];	
-	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
+//	[[SMLCurrentDocument valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:YES recolour:YES];
 	
 	if ([updatedSelectionsArray count] > 0) {
 		[textView setSelectedRanges:updatedSelectionsArray];

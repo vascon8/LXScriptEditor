@@ -20,303 +20,303 @@ Unless required by applicable law or agreed to in writing, software distributed 
 #import "MGSFragaria.h"
 #import "MGSFragariaFramework.h"
 
-@interface SMLLineNumbers()
-@property (retain) NSDictionary *attributes;
-@property (retain) id document;
-@property (retain) NSClipView *updatingLineNumbersForClipView;
-
-@end
-
-@implementation SMLLineNumbers
-
-@synthesize attributes, document, updatingLineNumbersForClipView;
-
-#pragma mark -
-#pragma mark Instance methods
-/*
- 
- - init
- 
- */
-- (id)init
-{
-	self = [self initWithDocument:nil];
-	
-	return self;
-}
-
-
-/*
- 
- - initWithDocument:
- 
- */
-- (id)initWithDocument:(id)theDocument
-{
-	if ((self = [super init])) {
-		
-		self.document = theDocument;
-		zeroPoint = NSMakePoint(0, 0);
-		
-		self.attributes = [[[NSDictionary alloc] initWithObjectsAndKeys:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]], NSFontAttributeName, nil] autorelease];
-		NSUserDefaultsController *defaultsController = [NSUserDefaultsController sharedUserDefaultsController];
-		[defaultsController addObserver:self forKeyPath:@"values.FragariaTextFont" options:NSKeyValueObservingOptionNew context:@"TextFontChanged"];
-	}
-	
-    return self;
-}
-
-#pragma mark -
-#pragma mark KVO
-/*
- 
- - observeValueForKeyPath:ofObject:change:context
- 
- */
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-	if ([(NSString *)context isEqualToString:@"TextFontChanged"]) {
-		self.attributes = [[[NSDictionary alloc] initWithObjectsAndKeys:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]], NSFontAttributeName, nil] autorelease];
-	} else {
-		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-	}
-}
-
-#pragma mark -
-#pragma mark View updating
-/*
- 
- - viewBoundsDidChange:
- 
- */
-- (void)viewBoundsDidChange:(NSNotification *)notification
-{
-	if (notification != nil && [notification object] != nil && [[notification object] isKindOfClass:[NSClipView class]]) {
-		[self updateLineNumbersForClipView:[notification object] checkWidth:YES recolour:YES];
-	}
-}
-
-/*
- 
- - updateLineNumbersCheckWidth:recolour:
- 
- */
-- (void)updateLineNumbersCheckWidth:(BOOL)checkWidth recolour:(BOOL)recolour
-{
-	[self updateLineNumbersForClipView:[[document valueForKey:ro_MGSFOScrollView] contentView] checkWidth:checkWidth recolour:recolour];
-}
-
-/*
- 
- - updateLineNumbersForClipView:checkWidth:recolour:
- 
- */
-- (void)updateLineNumbersForClipView:(NSClipView *)clipView checkWidth:(BOOL)checkWidth recolour:(BOOL)recolour
-{
-	NSScrollView *gutterScrollView = nil;
-	NSInteger idx = 0;
-	NSInteger lineNumber = 0;
-	NSRange range = NSMakeRange(0, 0);
-	NSInteger gutterWidth = 0;
-	NSRect currentViewBounds = NSZeroRect;
-	
-	NSInteger currentLineHeight;
-	
-	CGFloat addToScrollPoint;
-	
-	if (self.updatingLineNumbersForClipView == clipView) {
-		return;
-	}
-	self.updatingLineNumbersForClipView = clipView;
-	
-    @try {
-        SMLTextView *textView = [clipView documentView];
-        
-        if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == NO || textView == nil) {
-            if (checkWidth == YES && recolour == YES) {
-                [[document valueForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:textView];
-            }
-            goto allDone;
-        }
-        
-        NSScrollView *scrollView = (NSScrollView *)[clipView superview];
-        addToScrollPoint = 0;	
-        if (scrollView == [document valueForKey:ro_MGSFOScrollView]) {
-            gutterScrollView = [document valueForKey:ro_MGSFOGutterScrollView];
-        } else {
-            goto allDone;
-        }
-        
-        // get break points from delegate
-        NSSet* breakpoints = NULL;
-        id breakpointDelegate = [[MGSFragaria currentInstance] objectForKey:MGSFOBreakpointDelegate];
-        if (breakpointDelegate && [breakpointDelegate respondsToSelector:@selector(breakpointsForFile:)])
-        {
-            breakpoints = [breakpointDelegate breakpointsForFile:[gutterScrollView.documentView fileName]];
-        }
-        
-        NSLayoutManager *layoutManager = [textView layoutManager];
-        NSRect visibleRect = [[scrollView contentView] documentVisibleRect];
-        NSRange visibleRange = [layoutManager glyphRangeForBoundingRect:visibleRect inTextContainer:[textView textContainer]];
-        NSInteger location = visibleRange.location;
-        NSString *textString = [textView string];
-        if (location == NSNotFound) location = textString.length;
-        NSString *searchString = [textString substringWithRange:NSMakeRange(0, location)];
-        
-        for (idx = 0, lineNumber = 0; idx < (NSInteger)visibleRange.location; lineNumber++) {
-            idx = NSMaxRange([searchString lineRangeForRange:NSMakeRange(idx, 0)]);
-        }
-        
-        NSInteger indexNonWrap = [searchString lineRangeForRange:NSMakeRange(idx, 0)].location;
-        NSInteger maxRangeVisibleRange = NSMaxRange([textString lineRangeForRange:NSMakeRange(NSMaxRange(visibleRange), 0)]); // Set it to just after the last glyph on the last visible line
-        NSInteger numberOfGlyphsInTextString = [layoutManager numberOfGlyphs];
-        BOOL oneMoreTime = NO;
-        if (numberOfGlyphsInTextString != 0) {
-            unichar lastGlyph = [textString characterAtIndex:numberOfGlyphsInTextString - 1];
-            if (lastGlyph == '\n' || lastGlyph == '\r') {
-                oneMoreTime = YES; // Continue one more time through the loop if the last glyph isn't newline
-            }
-        }
-        NSMutableAttributedString *lineNumbersStringM = [[[NSMutableAttributedString alloc] init] autorelease];
-        
-        int textLine = 0;
-        NSMutableArray* textLineBreakpoints = [NSMutableArray array];
-        
-        NSRange selectedR = [textView selectedRange];
-        
-        SMLGutterTextView *gutterTV = [gutterScrollView documentView];
-        
-        NSFont *font = gutterTV.font;
-        NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:font toHaveTrait:NSBoldFontMask];
-        
-        NSLog(@"==gV:%@,tV:%@",NSStringFromRect(gutterTV.frame),NSStringFromRect(textView.frame));
-        
-        // generate line number string
-        while (indexNonWrap <= maxRangeVisibleRange)
-        {
-            NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
-//            NSLog(@"==fontS:%f,bounds:%@,containS:%@",font.pointSize,NSStringFromRect(gutterTV.frame),NSStringFromSize(gutterTV.textContainer.containerSize));
-            
-//            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
-//            NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%@",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSStringFromRange(([textString lineRangeForRange:selectedR])));
-            
-            //idx begining of every line
-            //indexNonWrap line range
-            // wrap or not
-            if (idx == indexNonWrap) {
-                lineNumber++;
-//                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
-                NSRange lineR = [textString lineRangeForRange:selectedR];
-                if ((lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) || (lineR.length == 0 && indexNonWrap == NSMaxRange(lineR))) {
-                    [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
-                    [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
-                    
-                    [dictM setValue:boldFont forKey:NSFontAttributeName];
-                    
-//                    NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%ld",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
-                }
-                
-                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li\n", (long)lineNumber] attributes:dictM]];
-                
-                textLine++;
-                
-                // flag breakpoints
-                if ([breakpoints containsObject:[NSNumber numberWithInt:(int)lineNumber]])
-                {
-                    [textLineBreakpoints addObject:[NSNumber numberWithInt:textLine]];
-                }
-            } else {
-//                [lineNumbersString appendFormat:@"%C\n", (unsigned short)0x00B7];
-                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%C\n", (unsigned short)0x00B7] attributes:dictM]];
-                
-                indexNonWrap = idx;
-                textLine++;
-            }
-            
-            if (idx < maxRangeVisibleRange) {
-                [layoutManager lineFragmentRectForGlyphAtIndex:idx effectiveRange:&range];
-                idx = NSMaxRange(range);
-                indexNonWrap = NSMaxRange([textString lineRangeForRange:NSMakeRange(indexNonWrap, 0)]);
-            } else {
-                idx++;
-                indexNonWrap ++;
-            }
-            
-            if (idx == numberOfGlyphsInTextString && !oneMoreTime) {
-                break;
-            }
-        }
-        
-        // check width is okay
-        NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
-        NSInteger widthOfGutter = [[document valueForKey:MGSFOGutterWidth] integerValue];
-        NSInteger bold = (int)boldFont.pointSize;
-        
-        if (((widthOfStringInGutter+bold) > widthOfGutter) || ((widthOfGutter > (widthOfStringInGutter+2*bold)) && widthOfGutter > (24+bold))) {
-            NSLog(@"==changed:%ld",(widthOfStringInGutter+bold));
-            [document setValue:[NSNumber numberWithInteger:(widthOfStringInGutter+bold)] forKey:MGSFOGutterWidth];
-            
-            if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
-                gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
-            } else {
-                gutterWidth = 0;
-            }
-            
-            currentViewBounds = [[gutterScrollView superview] bounds];
-            [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
-            
-            [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
-        }
-        
-//        if (checkWidth == YES) {
-////            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
-//            NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
-//            
-//            if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
-//                [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
-//                if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
-//                    gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
-//                } else {
-//                    gutterWidth = 0;
-//                }
-//                currentViewBounds = [[gutterScrollView superview] bounds];
-//                [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
-//                
-//                [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
+//@interface SMLLineNumbers()
+//@property (retain) NSDictionary *attributes;
+//@property (retain) id document;
+//@property (retain) NSClipView *updatingLineNumbersForClipView;
+//
+//@end
+//
+//@implementation SMLLineNumbers
+//
+//@synthesize attributes, document, updatingLineNumbersForClipView;
+//
+//#pragma mark -
+//#pragma mark Instance methods
+///*
+// 
+// - init
+// 
+// */
+//- (id)init
+//{
+//	self = [self initWithDocument:nil];
+//	
+//	return self;
+//}
+//
+//
+///*
+// 
+// - initWithDocument:
+// 
+// */
+//- (id)initWithDocument:(id)theDocument
+//{
+//	if ((self = [super init])) {
+//		
+//		self.document = theDocument;
+//		zeroPoint = NSMakePoint(0, 0);
+//		
+//		self.attributes = [[[NSDictionary alloc] initWithObjectsAndKeys:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]], NSFontAttributeName, nil] autorelease];
+//		NSUserDefaultsController *defaultsController = [NSUserDefaultsController sharedUserDefaultsController];
+//		[defaultsController addObserver:self forKeyPath:@"values.FragariaTextFont" options:NSKeyValueObservingOptionNew context:@"TextFontChanged"];
+//	}
+//	
+//    return self;
+//}
+//
+//#pragma mark -
+//#pragma mark KVO
+///*
+// 
+// - observeValueForKeyPath:ofObject:change:context
+// 
+// */
+//- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+//{
+//	if ([(NSString *)context isEqualToString:@"TextFontChanged"]) {
+//		self.attributes = [[[NSDictionary alloc] initWithObjectsAndKeys:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]], NSFontAttributeName, nil] autorelease];
+//	} else {
+//		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+//	}
+//}
+//
+//#pragma mark -
+//#pragma mark View updating
+///*
+// 
+// - viewBoundsDidChange:
+// 
+// */
+//- (void)viewBoundsDidChange:(NSNotification *)notification
+//{
+//	if (notification != nil && [notification object] != nil && [[notification object] isKindOfClass:[NSClipView class]]) {
+//		[self updateLineNumbersForClipView:[notification object] checkWidth:YES recolour:YES];
+//	}
+//}
+//
+///*
+// 
+// - updateLineNumbersCheckWidth:recolour:
+// 
+// */
+//- (void)updateLineNumbersCheckWidth:(BOOL)checkWidth recolour:(BOOL)recolour
+//{
+//	[self updateLineNumbersForClipView:[[document valueForKey:ro_MGSFOScrollView] contentView] checkWidth:checkWidth recolour:recolour];
+//}
+//
+///*
+// 
+// - updateLineNumbersForClipView:checkWidth:recolour:
+// 
+// */
+//- (void)updateLineNumbersForClipView:(NSClipView *)clipView checkWidth:(BOOL)checkWidth recolour:(BOOL)recolour
+//{
+//	NSScrollView *gutterScrollView = nil;
+//	NSInteger idx = 0;
+//	NSInteger lineNumber = 0;
+//	NSRange range = NSMakeRange(0, 0);
+//	NSInteger gutterWidth = 0;
+//	NSRect currentViewBounds = NSZeroRect;
+//	
+//	NSInteger currentLineHeight;
+//	
+//	CGFloat addToScrollPoint;
+//	
+//	if (self.updatingLineNumbersForClipView == clipView) {
+//		return;
+//	}
+//	self.updatingLineNumbersForClipView = clipView;
+//	
+//    @try {
+//        SMLTextView *textView = [clipView documentView];
+//        
+//        if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == NO || textView == nil) {
+//            if (checkWidth == YES && recolour == YES) {
+//                [[document valueForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:textView];
+//            }
+//            goto allDone;
+//        }
+//        
+//        NSScrollView *scrollView = (NSScrollView *)[clipView superview];
+//        addToScrollPoint = 0;	
+//        if (scrollView == [document valueForKey:ro_MGSFOScrollView]) {
+//            gutterScrollView = [document valueForKey:ro_MGSFOGutterScrollView];
+//        } else {
+//            goto allDone;
+//        }
+//        
+//        // get break points from delegate
+//        NSSet* breakpoints = NULL;
+//        id breakpointDelegate = [[MGSFragaria currentInstance] objectForKey:MGSFOBreakpointDelegate];
+//        if (breakpointDelegate && [breakpointDelegate respondsToSelector:@selector(breakpointsForFile:)])
+//        {
+//            breakpoints = [breakpointDelegate breakpointsForFile:[gutterScrollView.documentView fileName]];
+//        }
+//        
+//        NSLayoutManager *layoutManager = [textView layoutManager];
+//        NSRect visibleRect = [[scrollView contentView] documentVisibleRect];
+//        NSRange visibleRange = [layoutManager glyphRangeForBoundingRect:visibleRect inTextContainer:[textView textContainer]];
+//        NSInteger location = visibleRange.location;
+//        NSString *textString = [textView string];
+//        if (location == NSNotFound) location = textString.length;
+//        NSString *searchString = [textString substringWithRange:NSMakeRange(0, location)];
+//        
+//        for (idx = 0, lineNumber = 0; idx < (NSInteger)visibleRange.location; lineNumber++) {
+//            idx = NSMaxRange([searchString lineRangeForRange:NSMakeRange(idx, 0)]);
+//        }
+//        
+//        NSInteger indexNonWrap = [searchString lineRangeForRange:NSMakeRange(idx, 0)].location;
+//        NSInteger maxRangeVisibleRange = NSMaxRange([textString lineRangeForRange:NSMakeRange(NSMaxRange(visibleRange), 0)]); // Set it to just after the last glyph on the last visible line
+//        NSInteger numberOfGlyphsInTextString = [layoutManager numberOfGlyphs];
+//        BOOL oneMoreTime = NO;
+//        if (numberOfGlyphsInTextString != 0) {
+//            unichar lastGlyph = [textString characterAtIndex:numberOfGlyphsInTextString - 1];
+//            if (lastGlyph == '\n' || lastGlyph == '\r') {
+//                oneMoreTime = YES; // Continue one more time through the loop if the last glyph isn't newline
 //            }
 //        }
-        
-        if (recolour == YES) {
-            [[document valueForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:textView];
-        }
-        
-        // Fix flickering while rubber banding: Only change the text, if NOT rubber banding.
-        if (visibleRect.origin.y >= 0.0f && visibleRect.origin.y <= textView.frame.size.height - visibleRect.size.height) {
-            [[gutterScrollView documentView] setAttributeStr:lineNumbersStringM];
-//            NSLog(@"==view:%@",gutterScrollView.documentView);
-        }
-        
-        // set breakpoint lines
-        [[gutterScrollView documentView] setBreakpointLines:textLineBreakpoints];
-           
-        [[gutterScrollView contentView] setBoundsOrigin:zeroPoint]; // To avert an occasional bug which makes the line numbers disappear
-        currentLineHeight = (NSInteger)[textView lineHeight];
-        if ((NSInteger)visibleRect.origin.y != 0 && currentLineHeight != 0) {
-            CGFloat y = ((NSInteger)visibleRect.origin.y % currentLineHeight) + addToScrollPoint;  // Align the line numbers with the text.
-            
-            // Don't align, but directly calculate the offset, when rubber banding.
-            if (visibleRect.origin.y < 0.0f)
-                y = visibleRect.origin.y;
-            else if (visibleRect.origin.y > textView.frame.size.height - visibleRect.size.height)
-                y = visibleRect.origin.y - (textView.frame.size.height - visibleRect.size.height);
-            
-            [[gutterScrollView contentView] scrollToPoint:NSMakePoint(0, y)];
-        }
-	} @catch (NSException *e) {
-        NSLog(@"Exception: %@ %s %s", e, __FILE__, __FUNCTION__);
-    }
-allDone:
-	
-	self.updatingLineNumbersForClipView = nil;
-}
-@end
+//        NSMutableAttributedString *lineNumbersStringM = [[[NSMutableAttributedString alloc] init] autorelease];
+//        
+//        int textLine = 0;
+//        NSMutableArray* textLineBreakpoints = [NSMutableArray array];
+//        
+//        NSRange selectedR = [textView selectedRange];
+//        
+//        SMLGutterTextView *gutterTV = [gutterScrollView documentView];
+//        
+//        NSFont *font = gutterTV.font;
+//        NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:font toHaveTrait:NSBoldFontMask];
+//        
+////        NSLog(@"==gV:%@,tV:%@",NSStringFromRect(gutterTV.frame),NSStringFromRect(textView.frame));
+//        
+//        // generate line number string
+//        while (indexNonWrap <= maxRangeVisibleRange)
+//        {
+//            NSMutableDictionary *dictM = [NSMutableDictionary dictionaryWithDictionary:gutterTV.typingAttributes];
+////            NSLog(@"==fontS:%f,bounds:%@,containS:%@",font.pointSize,NSStringFromRect(gutterTV.frame),NSStringFromSize(gutterTV.textContainer.containerSize));
+//            
+////            NSLog(@"idx:%ld,wrp:%ld,",idx,indexNonWrap);
+////            NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%@",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSStringFromRange(([textString lineRangeForRange:selectedR])));
+//            
+//            //idx begining of every line
+//            //indexNonWrap line range
+//            // wrap or not
+//            if (idx == indexNonWrap) {
+//                lineNumber++;
+////                [lineNumbersString appendFormat:@"%li ha\n", (long)lineNumber];
+//                NSRange lineR = [textString lineRangeForRange:selectedR];
+//                if ((lineR.location <= indexNonWrap && indexNonWrap < NSMaxRange(lineR)) || (lineR.length == 0 && indexNonWrap == NSMaxRange(lineR))) {
+//                    [dictM setValue:[NSNumber numberWithInteger:2] forKey:NSUnderlineStyleAttributeName];
+//                    [dictM setValue:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
+//                    
+//                    [dictM setValue:boldFont forKey:NSFontAttributeName];
+//                    
+////                    NSLog(@"idx:%ld,indexWrp:%ld, visRange:%ld %@ , max:%ld",idx,indexNonWrap,maxRangeVisibleRange,NSStringFromRange(selectedR),NSMaxRange([textString lineRangeForRange:selectedR]));
+//                }
+//                
+//                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%li\n", (long)lineNumber] attributes:dictM]];
+//                
+//                textLine++;
+//                
+//                // flag breakpoints
+//                if ([breakpoints containsObject:[NSNumber numberWithInt:(int)lineNumber]])
+//                {
+//                    [textLineBreakpoints addObject:[NSNumber numberWithInt:textLine]];
+//                }
+//            } else {
+////                [lineNumbersString appendFormat:@"%C\n", (unsigned short)0x00B7];
+//                [lineNumbersStringM appendAttributedString:[[NSAttributedString alloc]initWithString:[NSString stringWithFormat:@"%C\n", (unsigned short)0x00B7] attributes:dictM]];
+//                
+//                indexNonWrap = idx;
+//                textLine++;
+//            }
+//            
+//            if (idx < maxRangeVisibleRange) {
+//                [layoutManager lineFragmentRectForGlyphAtIndex:idx effectiveRange:&range];
+//                idx = NSMaxRange(range);
+//                indexNonWrap = NSMaxRange([textString lineRangeForRange:NSMakeRange(indexNonWrap, 0)]);
+//            } else {
+//                idx++;
+//                indexNonWrap ++;
+//            }
+//            
+//            if (idx == numberOfGlyphsInTextString && !oneMoreTime) {
+//                break;
+//            }
+//        }
+//        
+//        // check width is okay
+//        NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
+//        NSInteger widthOfGutter = [[document valueForKey:MGSFOGutterWidth] integerValue];
+//        NSInteger bold = (int)boldFont.pointSize;
+//        
+//        if (((widthOfStringInGutter+bold) > widthOfGutter) || ((widthOfGutter > (widthOfStringInGutter+2*bold)) && widthOfGutter > (24+bold))) {
+////            NSLog(@"==changed:%ld",(widthOfStringInGutter+bold));
+//            [document setValue:[NSNumber numberWithInteger:(widthOfStringInGutter+bold)] forKey:MGSFOGutterWidth];
+//            
+//            if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
+//                gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
+//            } else {
+//                gutterWidth = 0;
+//            }
+//            
+//            currentViewBounds = [[gutterScrollView superview] bounds];
+//            [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
+//            
+//            [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
+//        }
+//        
+////        if (checkWidth == YES) {
+//////            NSInteger widthOfStringInGutter = [lineNumbersStringM sizeWithAttributes:self.attributes].width;
+////            NSInteger widthOfStringInGutter = [lineNumbersStringM size].width;
+////            
+////            if (widthOfStringInGutter > ([[document valueForKey:MGSFOGutterWidth] integerValue] - 14)) { // Check if the gutterTextView has to be resized
+////                [document setValue:[NSNumber numberWithInteger:widthOfStringInGutter + 20] forKey:MGSFOGutterWidth]; // Make it bigger than need be so it doesn't have to resized soon again
+////                if ([[document valueForKey:MGSFOShowLineNumberGutter] boolValue] == YES) {
+////                    gutterWidth = [[document valueForKey:MGSFOGutterWidth] integerValue];
+////                } else {
+////                    gutterWidth = 0;
+////                }
+////                currentViewBounds = [[gutterScrollView superview] bounds];
+////                [scrollView setFrame:NSMakeRect(gutterWidth, 0, currentViewBounds.size.width - gutterWidth, currentViewBounds.size.height)];
+////                
+////                [gutterScrollView setFrame:NSMakeRect(0, 0, [[document valueForKey:MGSFOGutterWidth] integerValue], currentViewBounds.size.height)];
+////            }
+////        }
+//        
+//        if (recolour == YES) {
+//            [[document valueForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:textView];
+//        }
+//        
+//        // Fix flickering while rubber banding: Only change the text, if NOT rubber banding.
+//        if (visibleRect.origin.y >= 0.0f && visibleRect.origin.y <= textView.frame.size.height - visibleRect.size.height) {
+//            [[gutterScrollView documentView] setAttributeStr:lineNumbersStringM];
+////            NSLog(@"==view:%@",gutterScrollView.documentView);
+//        }
+//        
+//        // set breakpoint lines
+//        [[gutterScrollView documentView] setBreakpointLines:textLineBreakpoints];
+//           
+//        [[gutterScrollView contentView] setBoundsOrigin:zeroPoint]; // To avert an occasional bug which makes the line numbers disappear
+//        currentLineHeight = (NSInteger)[textView lineHeight];
+//        if ((NSInteger)visibleRect.origin.y != 0 && currentLineHeight != 0) {
+//            CGFloat y = ((NSInteger)visibleRect.origin.y % currentLineHeight) + addToScrollPoint;  // Align the line numbers with the text.
+//            
+//            // Don't align, but directly calculate the offset, when rubber banding.
+//            if (visibleRect.origin.y < 0.0f)
+//                y = visibleRect.origin.y;
+//            else if (visibleRect.origin.y > textView.frame.size.height - visibleRect.size.height)
+//                y = visibleRect.origin.y - (textView.frame.size.height - visibleRect.size.height);
+//            
+//            [[gutterScrollView contentView] scrollToPoint:NSMakePoint(0, y)];
+//        }
+//	} @catch (NSException *e) {
+//        NSLog(@"Exception: %@ %s %s", e, __FILE__, __FUNCTION__);
+//    }
+//allDone:
+//	
+//	self.updatingLineNumbersForClipView = nil;
+//}
+//@end

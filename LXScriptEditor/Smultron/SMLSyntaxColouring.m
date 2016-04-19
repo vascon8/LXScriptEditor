@@ -23,6 +23,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 #import "LanguageTool.h"
 #import "LXTextAttachment.h"
+#import "LXEditScrollView.h"
 
 // syntax colouring information dictionary keys
 NSString *SMLSyntaxGroup = @"group";
@@ -2012,7 +2013,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 		autocompleteWordsTimer = [NSTimer scheduledTimerWithTimeInterval:[[SMLDefaults valueForKey:MGSFragariaPrefsAutocompleteAfterDelay] floatValue] target:self selector:@selector(autocompleteWordsTimerSelector:) userInfo:textView repeats:NO];
 	}
 	
-	[[document valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
+//	[[document valueForKey:ro_MGSFOLineNumbers] updateLineNumbersCheckWidth:NO recolour:NO];
 	
 }
 /*
@@ -2116,7 +2117,8 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	SMLTextView *textView = [aNotification object];
     
     //tag
-    [[document objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:textView.enclosingScrollView.contentView checkWidth:NO recolour:YES];
+//    [[document objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:textView.enclosingScrollView.contentView checkWidth:NO recolour:YES];
+    [(LXEditScrollView*)[textView enclosingScrollView] invalidateLineNumber];
 		
 	NSRange editedRange = [textView selectedRange];
 //    NSLog(@"editRange:%@,attstr:%@",NSStringFromRange(editedRange),[textView.textStorage attributedSubstringFromRange:editedRange]);

@@ -23,6 +23,10 @@
 		0F1D8DAE1C478DEF009872B6 /* LXScriptEditor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FF7DFAB1C473FA000FF8400 /* LXScriptEditor.framework */; };
 		0F2A43051CBF834A00EA80A2 /* LXTypeSetter.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F2A43031CBF834A00EA80A2 /* LXTypeSetter.h */; };
 		0F2A43061CBF834A00EA80A2 /* LXTypeSetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F2A43041CBF834A00EA80A2 /* LXTypeSetter.m */; };
+		0F30F1E31CC471EA0080D65D /* LXRulerView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F30F1E11CC471EA0080D65D /* LXRulerView.h */; };
+		0F30F1E41CC471EA0080D65D /* LXRulerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F30F1E21CC471EA0080D65D /* LXRulerView.m */; };
+		0F30F1E71CC472080080D65D /* LXEditScrollView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F30F1E51CC472080080D65D /* LXEditScrollView.h */; };
+		0F30F1E81CC472080080D65D /* LXEditScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F30F1E61CC472080080D65D /* LXEditScrollView.m */; };
 		0FA968751C9D8B0D00D0E962 /* LXTextAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 0FA968731C9D8B0D00D0E962 /* LXTextAttachment.h */; };
 		0FA968761C9D8B0D00D0E962 /* LXTextAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FA968741C9D8B0D00D0E962 /* LXTextAttachment.m */; };
 		0FBC7CE01C96B87E0086F3E3 /* LanguageTool.h in Headers */ = {isa = PBXBuildFile; fileRef = 0FBC7CDE1C96B87E0086F3E3 /* LanguageTool.h */; };
@@ -155,6 +159,10 @@
 		0F1D8DAC1C478D39009872B6 /* EditView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = EditView.xib; sourceTree = "<group>"; };
 		0F2A43031CBF834A00EA80A2 /* LXTypeSetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LXTypeSetter.h; sourceTree = "<group>"; };
 		0F2A43041CBF834A00EA80A2 /* LXTypeSetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LXTypeSetter.m; sourceTree = "<group>"; };
+		0F30F1E11CC471EA0080D65D /* LXRulerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LXRulerView.h; sourceTree = "<group>"; };
+		0F30F1E21CC471EA0080D65D /* LXRulerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LXRulerView.m; sourceTree = "<group>"; };
+		0F30F1E51CC472080080D65D /* LXEditScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LXEditScrollView.h; sourceTree = "<group>"; };
+		0F30F1E61CC472080080D65D /* LXEditScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LXEditScrollView.m; sourceTree = "<group>"; };
 		0FA968731C9D8B0D00D0E962 /* LXTextAttachment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LXTextAttachment.h; sourceTree = "<group>"; };
 		0FA968741C9D8B0D00D0E962 /* LXTextAttachment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LXTextAttachment.m; sourceTree = "<group>"; };
 		0FBC7CDE1C96B87E0086F3E3 /* LanguageTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanguageTool.h; sourceTree = "<group>"; };
@@ -631,6 +639,10 @@
 				0FA968741C9D8B0D00D0E962 /* LXTextAttachment.m */,
 				0F2A43031CBF834A00EA80A2 /* LXTypeSetter.h */,
 				0F2A43041CBF834A00EA80A2 /* LXTypeSetter.m */,
+				0F30F1E11CC471EA0080D65D /* LXRulerView.h */,
+				0F30F1E21CC471EA0080D65D /* LXRulerView.m */,
+				0F30F1E51CC472080080D65D /* LXEditScrollView.h */,
+				0F30F1E61CC472080080D65D /* LXEditScrollView.m */,
 			);
 			path = Smultron;
 			sourceTree = "<group>";
@@ -764,6 +776,7 @@
 				0FF7E0B91C47400D00FF8400 /* SMLLineNumbers.h in Headers */,
 				0FF7E09A1C47400D00FF8400 /* parseerr.h in Headers */,
 				0FF7E0C21C47400D00FF8400 /* SMLTextPerformer.h in Headers */,
+				0F30F1E31CC471EA0080D65D /* LXRulerView.h in Headers */,
 				0FF7E0A51C47400D00FF8400 /* utf16.h in Headers */,
 				0F2A43051CBF834A00EA80A2 /* LXTypeSetter.h in Headers */,
 				0FF7E0B31C47400D00FF8400 /* SMLErrorPopOver.h in Headers */,
@@ -773,6 +786,7 @@
 				0FF7E0A21C47400D00FF8400 /* urename.h in Headers */,
 				0FF7E0AC1C47400D00FF8400 /* ICUPattern.h in Headers */,
 				0FF7E08F1C47400C00FF8400 /* MGSGlyphGenerator.h in Headers */,
+				0F30F1E71CC472080080D65D /* LXEditScrollView.h in Headers */,
 				0FF7E0B51C47400D00FF8400 /* SMLGutterTextView.h in Headers */,
 				0FBC7CE01C96B87E0086F3E3 /* LanguageTool.h in Headers */,
 				0FF7E0BB1C47400D00FF8400 /* SMLStandardHeader.h in Headers */,
@@ -972,11 +986,13 @@
 				0FF7E07E1C47400C00FF8400 /* DBPrefsWindowController.m in Sources */,
 				0FF7E0AB1C47400D00FF8400 /* ICUMatcher.m in Sources */,
 				0FF7E0B81C47400D00FF8400 /* SMLLayoutManager.m in Sources */,
+				0F30F1E41CC471EA0080D65D /* LXRulerView.m in Sources */,
 				0FF7E0BD1C47400D00FF8400 /* SMLSyntaxColouring.m in Sources */,
 				0FF7E0981C47400D00FF8400 /* NSScanner+Fragaria.m in Sources */,
 				0FF7E0B41C47400D00FF8400 /* SMLErrorPopOver.m in Sources */,
 				0FF7E0AD1C47400D00FF8400 /* ICUPattern.m in Sources */,
 				0FF7E0851C47400C00FF8400 /* MGSFragaria.m in Sources */,
+				0F30F1E81CC472080080D65D /* LXEditScrollView.m in Sources */,
 				0FF7E0961C47400C00FF8400 /* MGSTextMenuController.m in Sources */,
 				0FF7E0921C47400C00FF8400 /* MGSPreferencesController.m in Sources */,
 				0FF7E08C1C47400C00FF8400 /* MGSFragariaPrefsViewController.m in Sources */,

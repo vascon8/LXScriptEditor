@@ -19,18 +19,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 #import <Cocoa/Cocoa.h>
 
-@class SMLTextView;
+//@class SMLTextView;
 
-@interface SMLLineNumbers : NSObject {
-	NSPoint zeroPoint;
-	NSClipView *updatingLineNumbersForClipView;
-    NSDictionary *attributes;
-    id document;
-}
+//@interface SMLLineNumbers : NSObject {
+//	NSPoint zeroPoint;
+//	NSClipView *updatingLineNumbersForClipView;
+//    NSDictionary *attributes;
+//    id document;
+//}
 
-- (id)initWithDocument:(id)theDocument;
-- (void)viewBoundsDidChange:(NSNotification *)notification;
-- (void)updateLineNumbersCheckWidth:(BOOL)checkWidth recolour:(BOOL)recolour;
-- (void)updateLineNumbersForClipView:(NSClipView *)clipView checkWidth:(BOOL)checkWidth recolour:(BOOL)recolour;
+//- (id)initWithDocument:(id)theDocument;
+//- (void)viewBoundsDidChange:(NSNotification *)notification;
+//- (void)updateLineNumbersCheckWidth:(BOOL)checkWidth recolour:(BOOL)recolour;
+//- (void)updateLineNumbersForClipView:(NSClipView *)clipView checkWidth:(BOOL)checkWidth recolour:(BOOL)recolour;
 
-@end
+//@end

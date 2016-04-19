@@ -26,14 +26,14 @@ extern NSString * const MGSFOGutterWidth;
 // NSView *
 extern NSString * const ro_MGSFOTextView; // readonly
 extern NSString * const ro_MGSFOScrollView; // readonly
-extern NSString * const ro_MGSFOGutterScrollView; // readonly
+//extern NSString * const ro_MGSFOGutterScrollView; // readonly
 
 // NSObject
 extern NSString * const MGSFODelegate;
 extern NSString * const MGSFOBreakpointDelegate;
 extern NSString * const MGSFOAutoCompleteDelegate;
 extern NSString * const MGSFOSyntaxColouringDelegate;
-extern NSString * const ro_MGSFOLineNumbers; // readonly
+//extern NSString * const ro_MGSFOLineNumbers; // readonly
 extern NSString * const ro_MGSFOSyntaxColouring; // readonly
 
 @class MGSTextMenuController;
