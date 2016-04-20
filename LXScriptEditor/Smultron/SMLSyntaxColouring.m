@@ -229,7 +229,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 //													 name:@"NSUndoManagerWillUndoChangeNotification"
 //												   object:undoManager];
 		// add document KVO observers
-		[document addObserver:self forKeyPath:@"syntaxDefinition" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:@"syntaxDefinition"];
+		[document addObserver:self forKeyPath:@"LXsyntaxDefinition" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:@"LXsyntaxDefinition"];
 		
 		// add NSUserDefaultsController KVO observers
 		NSUserDefaultsController *defaultsController = [NSUserDefaultsController sharedUserDefaultsController];
@@ -288,7 +288,7 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
 	} else if ([(__bridge NSString *)context isEqualToString:@"MultiLineChanged"]) {
 		[self prepareRegularExpressions];
 		[self pageRecolour];
-	} else if ([(__bridge NSString *)context isEqualToString:@"syntaxDefinition"]) {
+	} else if ([(__bridge NSString *)context isEqualToString:@"LXsyntaxDefinition"]) {
         
         if (![[change valueForKey:@"new"] isEqualToString:[change valueForKey:@"old"]]) {
             [self applySyntaxDefinition];

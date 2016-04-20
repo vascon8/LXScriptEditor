@@ -110,7 +110,7 @@
     
 //    NSLog(@"strS:%@,iR:%@,cellF:%@",NSStringFromSize(strSize),NSStringFromRect(irect),NSStringFromRect(cellFrame));
     NSRect r = NSMakeRect(irect.origin.x + (irect.size.width - strSize.width) /2.0 ,
-                          irect.origin.y + (irect.size.height - strSize.height)/2.0-1.0 ,
+                          irect.origin.y + (irect.size.height - strSize.height)/2.0 - 2.0 ,
                           strSize.width, strSize.height);
 //    [[NSColor blackColor] set];
 //    NSLog(@"rect:%@,strs:%@",NSStringFromRect(r),NSStringFromSize(strSize));
@@ -128,7 +128,7 @@
 
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
-    superPoint.y -= 3.0;
+    superPoint.y -= 4.0;
     return superPoint;
 }
 

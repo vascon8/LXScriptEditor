@@ -9,9 +9,10 @@
 #import "LXScriptEditor.h"
 #import "MGSTextMenuController.h"
 #import "MGSFragaria.h"
+#import "MGSFragariaFramework.h"
 
-NSString * const LXScriptSyntaxDefinitionName = @"syntaxDefinition";
-NSString * const LXScriptAutocomplete = @"FragariaAutocompleteSuggestAutomatically";
+NSString * const LXScriptSyntaxDefinitionName = @"LXsyntaxDefinition";
+NSString * const LXScriptAutocomplete = @"LXAutocompleteSuggest";
 
 @interface LXScriptEditor ()
 @property MGSTextMenuController *menuController;
@@ -25,7 +26,7 @@ NSString * const LXScriptAutocomplete = @"FragariaAutocompleteSuggestAutomatical
     if (self = [super init]) {
         self.fragaria = [[MGSFragaria alloc]init];
         [self.fragaria setObject:self forKey:MGSFODelegate];
-        [self.fragaria setObject:[NSNumber numberWithBool:YES] forKey:MGSFOIsSyntaxColoured];
+        [SMLDefaults setValue:[NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Menlo" size:11.0]] forKey:MGSFragariaPrefsTextFont];
         
         //        [self.fragaria setObject:[NSNumber numberWithBool:YES] forKey:MGSFOShowLineNumberGutter];
         //        [self.fragaria setObject:[NSNumber numberWithInteger:20] forKey:MGSFOGutterWidth];

@@ -21,7 +21,7 @@ NSString * const MGSFOShowLineNumberGutter = @"showLineNumberGutter";
 NSString * const MGSFOIsEdited = @"isEdited";
 
 // string
-NSString * const MGSFOSyntaxDefinitionName = @"syntaxDefinition";
+NSString * const MGSFOSyntaxDefinitionName = @"LXsyntaxDefinition";
 NSString * const MGSFODocumentName = @"name";
 
 // class name strings
