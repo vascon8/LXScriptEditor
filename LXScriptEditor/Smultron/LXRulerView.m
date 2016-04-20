@@ -43,8 +43,9 @@ static CGFontRef BoldLineNumberFont;
             size = 12.0;
         }
         
-        NSFont *font = [NSFont fontWithName:@"Menlo" size:size];
-        NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:font toHaveTrait:NSBoldFontMask|NSItalicFontMask];
+        NSFont *font = [NSFont fontWithName:@"Menlo" size:size-1];
+        NSFont *boldF = [NSFont fontWithName:@"Menlo" size:size];
+        NSFont *boldFont = [[NSFontManager sharedFontManager] convertFont:boldF toHaveTrait:NSBoldFontMask];
         
         LineNumberFont = CGFontCreateWithFontName((CFStringRef)[font fontName]);
         BoldLineNumberFont = CGFontCreateWithFontName((CFStringRef)[boldFont fontName]);
@@ -364,7 +365,7 @@ static CGFontRef BoldLineNumberFont;
     
     // prepare glyphs
     CGGlyph wrappedMarkGlyph;
-    const unichar dash = '-';
+    const unichar dash = '~';
     CTFontGetGlyphsForCharacters(font, &dash, &wrappedMarkGlyph, 1);
     
     CGGlyph digitGlyphs[10];
@@ -481,7 +482,15 @@ static CGFontRef BoldLineNumberFont;
             if (lastLineNumber == lineNumber) {  // wrapped line
                 if (!isVerticalText) {
                     CGPoint position = CGPointMake(ruleThickness - charWidth, y);
+                    if (isSelected) {
+                        CGContextSetFillColorWithColor(context, [NSColor blackColor].CGColor);
+                        CGContextSetFont(context, BoldLineNumberFont);
+                    }
                     CGContextShowGlyphsAtPositions(context, &wrappedMarkGlyph, &position, 1);  // draw wrapped mark
+                    if (isSelected) {
+                        CGContextSetFont(context, LineNumberFont);
+                        CGContextSetFillColorWithColor(context, [textColor CGColor]);
+                    }
                 }
                 
             } else {  // new line

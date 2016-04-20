@@ -1793,6 +1793,8 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
  */
 - (void)highlightLineRange:(NSRange)lineRange
 {
+    return;
+    
 	if (lineRange.location == lastLineHighlightRange.location && lineRange.length == lastLineHighlightRange.length) {
 		return;
 	}

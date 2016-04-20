@@ -8,14 +8,11 @@
 
 #import "EditViewController.h"
 
-#import "MGSFragaria.h"
-#import "MGSTextMenuController.h"
+#import "LXScriptEditor.h"
+//#import "MGSTextMenuController.h"
 
 @interface EditViewController ()
-@property MGSFragaria *fragaria;
-@property MGSFragariaTextEditingPrefsViewController *editController;
-//@property MGSFragariaPrefsViewController *prefController;
-@property MGSTextMenuController *menuController;
+@property LXScriptEditor *editor;
 @end
 
 @implementation EditViewController
@@ -25,38 +22,18 @@
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
         // Initialization code here.
-        self.fragaria = [[MGSFragaria alloc]init];
-        [self.fragaria setObject:self forKey:MGSFODelegate];
+        self.editor = [[LXScriptEditor alloc]init];
         
-        [self.fragaria setObject:[NSNumber numberWithBool:YES] forKey:MGSFOShowLineNumberGutter];
-        //        [self.fragaria setObject:[NSNumber numberWithInteger:20] forKey:MGSFOGutterWidth];
+        [self.editor embedInView:self.view];
         
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutocompleteSuggestAutomatically];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:NO] forKey:MGSFragariaPrefsAutocompleteIncludeStandardWords];
-        
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:NO] forKey:MGSFragariaPrefsHighlightCurrentLine];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSArchiver archivedDataWithRootObject:[NSColor greenColor]] forKey:MGSFragariaPrefsHighlightLineColourWell];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutoInsertAClosingBrace];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutoInsertAClosingParenthesis];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsAutomaticallyIndentBraces];
-        
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsShowMatchingBraces];
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:MGSFragariaPrefsIndentNewLinesAutomatically];
-        
-        
-        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithInteger:26] forKey:MGSFragariaPrefsGutterWidth];
-        
-        self.menuController = self.fragaria.textMenuController;
-        
-        [self.fragaria embedInView:self.view];
-        self.editController = [MGSFragariaPreferences sharedInstance].textEditingPrefsViewController;
-        
-        NSString *path = @"/Users/xinliu/Desktop/weibo_webView_iOS_10131546.py" ;
+        NSString *path = @"/Users/xinliu/TestWA/ni好喔9个99/RecordScript/优酷视频_Android_11082241.py" ;
         NSString *str =  [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
         
-        [self.fragaria setObject:@"Python" forKey:MGSFOSyntaxDefinitionName];
-        [self.fragaria setString:str];
-        [self.fragaria reloadString];
+        [self.editor setObject:@"Python" forKey:LXScriptSyntaxDefinitionName];
+        [[NSUserDefaults standardUserDefaults]setObject:[NSNumber numberWithBool:YES] forKey:LXScriptAutocomplete];
+        
+        [self.editor setString:str];
+        [self.editor reloadString];
     }
     return self;
 }
