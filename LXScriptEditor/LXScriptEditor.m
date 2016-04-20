@@ -26,7 +26,7 @@ NSString * const LXScriptAutocomplete = @"LXAutocompleteSuggest";
     if (self = [super init]) {
         self.fragaria = [[MGSFragaria alloc]init];
         [self.fragaria setObject:self forKey:MGSFODelegate];
-        [SMLDefaults setValue:[NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Menlo" size:11.0]] forKey:MGSFragariaPrefsTextFont];
+        [SMLDefaults setValue:[NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Menlo" size:12.0]] forKey:MGSFragariaPrefsTextFont];
         
         //        [self.fragaria setObject:[NSNumber numberWithBool:YES] forKey:MGSFOShowLineNumberGutter];
         //        [self.fragaria setObject:[NSNumber numberWithInteger:20] forKey:MGSFOGutterWidth];

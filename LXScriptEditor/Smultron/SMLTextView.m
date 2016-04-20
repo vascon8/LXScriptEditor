@@ -149,7 +149,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 	lineHeight = [[[self textContainer] layoutManager] defaultLineHeightForFont:[NSUnarchiver unarchiveObjectWithData:[SMLDefaults valueForKey:MGSFragariaPrefsTextFont]]];
     
     self.lineSpacing = self.font.pointSize / 2.0 * 0.618;
-//    self.lineSpacing = 15;
+//    self.lineSpacing = 0;
     
 //    NSScrollView *guttScrollView = [fragaria valueForKey:ro_MGSFOGutterScrollView];
 //    SMLGutterTextView *guttView = guttScrollView.documentView;
@@ -1291,8 +1291,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
                     if(compRange.location==NSNotFound) continue;
                     NSRange tokenEffecRange = NSMakeRange(charRange.location+compRange.location+subLoc, finalStr.length);
 //                    NSLog(@"==finalstr:%@,compR:%@,tokenR:%@",finalStr,NSStringFromRange(compRange),NSStringFromRange(tokenEffecRange));
-                    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font];
-                    
+                    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font textview:self];
                     if(![[self.textStorage.string substringWithRange:tokenEffecRange] isEqualToString:finalStr]) continue;
                     if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
                         [self shouldChangeTextInRange:tokenEffecRange replacementString:as.string];

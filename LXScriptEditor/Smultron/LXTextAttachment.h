@@ -8,13 +8,15 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class SMLTextView;
+
 @interface LXTextAttachment : NSTextAttachment
-+ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont*)font;
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font textview:(SMLTextView*)textview;
 @end
 
 
 
 @interface LXTextAttachmentCell :NSTextAttachmentCell
-- (id)initTextCell:(NSString *)aString font:(NSFont*)font;
+- (id)initTextCell:(NSString *)aString font:(NSFont*)font textview:(SMLTextView*)textview;
 @property (retain) NSAttributedString *attStr;
 @end

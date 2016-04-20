@@ -15,13 +15,13 @@
 #define TokenFontDelta 1.0f
 
 @implementation LXTextAttachment
-- (id)initWithName:(NSString *)name font:(NSFont*)font
+- (id)initWithName:(NSString *)name font:(NSFont*)font textview:(SMLTextView*)textview
 {
 //    NSFileWrapper *fw = [[NSFileWrapper alloc] init];
 //    [fw setPreferredFilename:@"lxtokenattachment"];
     self = [super init];
     if (self) {
-        LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font];
+        LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font textview:textview];
         [self setAttachmentCell:aCell];
     }
     
@@ -29,25 +29,33 @@
     
 }
 
-+ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font textview:(SMLTextView*)textview
 {
-    LXTextAttachment *attachment = [[LXTextAttachment alloc] initWithName:name font:font];
+    LXTextAttachment *attachment = [[LXTextAttachment alloc] initWithName:name font:font textview:textview];
     return [NSAttributedString attributedStringWithAttachment:attachment];
 }
 @end
 
-
+@interface LXTextAttachmentCell ()
+@property NSFont *font;
+@property SMLTextView *textView;
+@end
 @implementation LXTextAttachmentCell
-- (id)initTextCell:(NSString *)aString font:(NSFont*)font
+- (id)initTextCell:(NSString *)aString font:(NSFont*)font textview:(SMLTextView*)textview
 {
     self = [super initTextCell:aString];
     if (self) {
-        NSAttributedString *str = [[NSAttributedString alloc] initWithString:aString attributes:@{NSForegroundColorAttributeName: [NSColor blackColor],NSFontAttributeName:font}];
+        NSAttributedString *str = [[[NSAttributedString alloc] initWithString:aString attributes:@{NSForegroundColorAttributeName: [NSColor blackColor],NSFontAttributeName:font}] autorelease];
+        self.attStr = str;
+        self.font = font;
+        self.textView = textview;
+        
         [self setAttributedStringValue:str];
         [self setEditable:NO];
         [self setSelectable:YES];
         [self setType:NSTextCellType];
         [self setStringValue:aString];
+//        NSLog(@"==init font:%@,pointS:%f,attstr:%@,str:%@",font,font.pointSize,self.attributedStringValue,str);
     }
     return self;
 }
@@ -116,19 +124,31 @@
 //    NSLog(@"rect:%@,strs:%@",NSStringFromRect(r),NSStringFromSize(strSize));
     [smallerString drawInRect:r];
 }
-
+- (NSAttributedString *)attributedStringValue
+{
+    return self.attStr;
+}
 - (NSSize)cellSize
 {
     NSAttributedString *str = [self attributedStringValue];
     NSSize size = [str size];
+    
     NSSize cellS = NSMakeSize(2.0*HorizonPadding+2.0*TokenInRectPadding + 2.0*TokenInRectPadding +size.width,size.height-2*TokenFontDelta);
-//    NSLog(@"cellS:%@,size:%@",NSStringFromSize(cellS),NSStringFromSize(size));
+//    NSLog(@"cellS:%@,size:%@,str:%@",NSStringFromSize(cellS),NSStringFromSize(size),str);
     return cellS;
 }
 
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
-    superPoint.y -= 4.0;
+    CGFloat H = self.attStr.size.height;
+    CGFloat fontS = self.font.pointSize;
+    CGFloat lineH = self.textView.lineHeight;
+    
+    CGFloat delta = (H - lineH) + (lineH - fontS)/2.0 - 1.0;
+    
+    NSLog(@"==point:%@,H:%f,fS:%f,lineH:%f,delta:%f",NSStringFromPoint(superPoint),H,fontS,lineH,delta);
+    
+    superPoint.y -= delta;
     return superPoint;
 }
 
