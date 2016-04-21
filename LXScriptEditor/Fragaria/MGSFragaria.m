@@ -40,7 +40,7 @@ NSString * const ro_MGSFOScrollView = @"firstTextScrollView"; // readonly
 //NSString * const ro_MGSFOGutterScrollView = @"firstGutterScrollView"; // readonly
 
 // NSObject
-NSString * const MGSFODelegate = @"delegate";
+NSString * const MGSFODelegate = @"LXdelegate";
 NSString * const MGSFOBreakpointDelegate = @"breakpointDelegate";
 NSString * const MGSFOAutoCompleteDelegate = @"autoCompleteDelegate";
 NSString * const MGSFOSyntaxColouringDelegate = @"syntaxColouringDelegate";

@@ -10,6 +10,7 @@
 
 extern NSString * const LXScriptSyntaxDefinitionName;
 extern NSString * const LXScriptAutocomplete;
+extern NSString * const LXSEditorDelegate;
 
 @interface LXScriptEditor : NSObject
 

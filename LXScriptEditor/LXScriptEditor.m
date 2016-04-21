@@ -13,6 +13,7 @@
 
 NSString * const LXScriptSyntaxDefinitionName = @"LXsyntaxDefinition";
 NSString * const LXScriptAutocomplete = @"LXAutocompleteSuggest";
+NSString * const LXSEditorDelegate = @"LXdelegate";
 
 @interface LXScriptEditor ()
 @property MGSTextMenuController *menuController;
@@ -25,7 +26,7 @@ NSString * const LXScriptAutocomplete = @"LXAutocompleteSuggest";
 {
     if (self = [super init]) {
         self.fragaria = [[MGSFragaria alloc]init];
-        [self.fragaria setObject:self forKey:MGSFODelegate];
+//        [self.fragaria setObject:self forKey:MGSFODelegate];
         [SMLDefaults setValue:[NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Menlo" size:12.0]] forKey:MGSFragariaPrefsTextFont];
         
         //        [self.fragaria setObject:[NSNumber numberWithBool:YES] forKey:MGSFOShowLineNumberGutter];
