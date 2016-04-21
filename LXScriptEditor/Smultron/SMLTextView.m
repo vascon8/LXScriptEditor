@@ -179,12 +179,14 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
  - setFrame:
  
  */
-- (void)setFrame:(NSRect)rect
-{
-	[super setFrame:rect];
-//	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
-	
-}
+//- (void)setFrame:(NSRect)rect
+//{
+//	[super setFrame:rect];
+//    
+//    [self didChangeText];
+////	[[fragaria objectForKey:ro_MGSFOLineNumbers] updateLineNumbersForClipView:[[self enclosingScrollView] contentView] checkWidth:NO recolour:YES];
+//	
+//}
 
 #pragma mark -
 #pragma mark Copy and paste
@@ -229,7 +231,8 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
         
         selection = [[[[self textStorage] attributedSubstringFromRange:[self selectedRange]] copy] autorelease];
         
-        selectionAsData = [NSArchiver archivedDataWithRootObject:selection];
+//        selectionAsData = [NSArchiver archivedDataWithRootObject:selection];
+        selectionAsData = [NSKeyedArchiver archivedDataWithRootObject:selection];
         
         result = [pboard setData:selectionAsData forType:LXMarkupPboardType];
         
@@ -244,13 +247,15 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
         NSData* pasteboardData = [pboard dataForType:LXMarkupPboardType];
         
         if (pasteboardData) {
-            id data = [NSUnarchiver unarchiveObjectWithData:pasteboardData];
+            id data = [NSKeyedUnarchiver unarchiveObjectWithData:pasteboardData];
+//            data = [NSUnarchiver unarchiveObjectWithData:pasteboardData];
             
             if ([data isKindOfClass:[NSAttributedString class]]) {
                 NSRange range = [self rangeForUserTextChange];
                 
                 NSMutableAttributedString *pbContent = [[NSMutableAttributedString alloc]initWithAttributedString:data];
-//                NSLog(@"==pbcontent:%@,eRange:%@,range:%@",pbContent,NSStringFromRange(eRange),NSStringFromRange(range));
+
+//                NSLog(@"==pbcontent:%@,range:%@",pbContent,NSStringFromRange(range));
                 
                 __block BOOL hasCell = NO;
                 [pbContent enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, pbContent.length) options:NSAttributedStringEnumerationReverse usingBlock:^(NSTextAttachment *value, NSRange range, BOOL *stop) {
@@ -260,6 +265,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
                 }];
                 
                 if (hasCell) {
+//                    NSAttributedString *as = [LXTextAttachment placeholderAsAttributedStringWithName:pbContent.string font:self.textStorage.font textview:self];
                     [self shouldChangeTextInRange:range replacementString:pbContent.string];
                     [[self textStorage] beginEditing];
                     [[self textStorage] replaceCharactersInRange:range withAttributedString:pbContent];
@@ -1291,7 +1297,7 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
                     if(compRange.location==NSNotFound) continue;
                     NSRange tokenEffecRange = NSMakeRange(charRange.location+compRange.location+subLoc, finalStr.length);
 //                    NSLog(@"==finalstr:%@,compR:%@,tokenR:%@",finalStr,NSStringFromRange(compRange),NSStringFromRange(tokenEffecRange));
-                    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font textview:self];
+                    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:finalStr font:self.textStorage.font];
                     if(![[self.textStorage.string substringWithRange:tokenEffecRange] isEqualToString:finalStr]) continue;
                     if (tokenEffecRange.location!=NSNotFound && as.length>0 && NSMaxRange(tokenEffecRange)<[self.textStorage length]) {
                         [self shouldChangeTextInRange:tokenEffecRange replacementString:as.string];
@@ -1329,12 +1335,12 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
     
     return NO;
 }
--(NSAttributedString*)tokenForString:(NSString*)aString range:(NSRange)range
-{
-    
-    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:aString font:self.textStorage.font];
-	return as;
-}
+//-(NSAttributedString*)tokenForString:(NSString*)aString range:(NSRange)range
+//{
+//    
+//    NSAttributedString*  as = [LXTextAttachment placeholderAsAttributedStringWithName:aString font:self.textStorage.font;
+//	return as;
+//}
 /*
 - (void)textStorageWillProcessEditing:(NSNotification *)notification
 {

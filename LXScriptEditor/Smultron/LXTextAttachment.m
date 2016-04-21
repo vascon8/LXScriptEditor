@@ -9,19 +9,20 @@
 #import "LXTextAttachment.h"
 
 #import "SMLTextView.h"
+#import "MGSFragaria.h"
 
 #define HorizonPadding 6.0f
 #define TokenInRectPadding 0.0f
 #define TokenFontDelta 1.0f
 
 @implementation LXTextAttachment
-- (id)initWithName:(NSString *)name font:(NSFont*)font textview:(SMLTextView*)textview
+- (id)initWithName:(NSString *)name font:(NSFont*)font
 {
 //    NSFileWrapper *fw = [[NSFileWrapper alloc] init];
 //    [fw setPreferredFilename:@"lxtokenattachment"];
     self = [super init];
     if (self) {
-        LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font textview:textview];
+        LXTextAttachmentCell *aCell = [[LXTextAttachmentCell alloc] initTextCell:name font:font];
         [self setAttachmentCell:aCell];
     }
     
@@ -29,26 +30,29 @@
     
 }
 
-+ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font textview:(SMLTextView*)textview
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font
 {
-    LXTextAttachment *attachment = [[LXTextAttachment alloc] initWithName:name font:font textview:textview];
+    LXTextAttachment *attachment = [[LXTextAttachment alloc] initWithName:name font:font];
     return [NSAttributedString attributedStringWithAttachment:attachment];
+}
+- (id)copy
+{
+    return [self retain];
+}
+- (id)mutableCopy
+{
+    return [self retain];
 }
 @end
 
-@interface LXTextAttachmentCell ()
-@property NSFont *font;
-@property SMLTextView *textView;
-@end
+
 @implementation LXTextAttachmentCell
-- (id)initTextCell:(NSString *)aString font:(NSFont*)font textview:(SMLTextView*)textview
+- (id)initTextCell:(NSString *)aString font:(NSFont *)font
 {
     self = [super initTextCell:aString];
     if (self) {
         NSAttributedString *str = [[[NSAttributedString alloc] initWithString:aString attributes:@{NSForegroundColorAttributeName: [NSColor blackColor],NSFontAttributeName:font}] autorelease];
         self.attStr = str;
-        self.font = font;
-        self.textView = textview;
         
         [self setAttributedStringValue:str];
         [self setEditable:NO];
@@ -141,12 +145,12 @@
 -(NSPoint)cellBaselineOffset{
     NSPoint superPoint = [super cellBaselineOffset];
     CGFloat H = self.attStr.size.height;
-    CGFloat fontS = self.font.pointSize;
-    CGFloat lineH = self.textView.lineHeight;
+    CGFloat fontS = [self textView].font.pointSize;
+    CGFloat lineH = [self textView].lineHeight;
     
     CGFloat delta = (H - lineH) + (lineH - fontS)/2.0 - 1.0;
     
-    NSLog(@"==point:%@,H:%f,fS:%f,lineH:%f,delta:%f",NSStringFromPoint(superPoint),H,fontS,lineH,delta);
+//    NSLog(@"==point:%@,H:%f,fS:%f,lineH:%f,delta:%f",NSStringFromPoint(superPoint),H,fontS,lineH,delta);
     
     superPoint.y -= delta;
     return superPoint;
@@ -186,5 +190,26 @@
 -(id)mutableCopy
 {
     return [self retain];
+}
+- (SMLTextView*)textView{
+    SMLTextView *textView = [[MGSFragaria currentInstance] objectForKey:ro_MGSFOTextView];
+    return textView;
+}
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super initWithCoder:aDecoder]) {
+//        self.font = [aDecoder decodeObjectForKey:@"font"];
+//        self.textView = [aDecoder decodeObjectForKey:@"textview"];
+        self.attStr = [aDecoder decodeObjectForKey:@"attstr"];
+    }
+    return self;
+}
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [super encodeWithCoder:aCoder];
+    
+    [aCoder encodeObject:self.attStr forKey:@"attstr"];
+//    [aCoder encodeObject:self.font forKey:@"font"];
+//    [aCoder encodeObject:self.textView forKey:@"textview"];
 }
 @end

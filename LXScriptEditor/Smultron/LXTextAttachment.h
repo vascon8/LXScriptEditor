@@ -11,12 +11,12 @@
 @class SMLTextView;
 
 @interface LXTextAttachment : NSTextAttachment
-+ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font textview:(SMLTextView*)textview;
++ (NSAttributedString *)placeholderAsAttributedStringWithName:(NSString *)name font:(NSFont *)font;
 @end
 
 
 
 @interface LXTextAttachmentCell :NSTextAttachmentCell
-- (id)initTextCell:(NSString *)aString font:(NSFont*)font textview:(SMLTextView*)textview;
+- (id)initTextCell:(NSString *)aString font:(NSFont*)font;
 @property (retain) NSAttributedString *attStr;
 @end

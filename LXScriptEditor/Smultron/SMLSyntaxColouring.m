@@ -2256,8 +2256,8 @@ NSString *SMLSyntaxDefinitionIncludeInKeywordEndCharacterSet = @"includeInKeywor
         [attachment setAttachmentCell:cell];
 		NSAttributedString *s = [NSAttributedString attributedStringWithAttachment:attachment];
 
-//        NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:attachment];
-        NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:s];
+//        NSData *selectionAsData = [NSArchiver archivedDataWithRootObject:s];
+        NSData *selectionAsData = [NSKeyedArchiver archivedDataWithRootObject:s];
         
         [pboard setData:selectionAsData forType:LXMarkupPboardType];
         
