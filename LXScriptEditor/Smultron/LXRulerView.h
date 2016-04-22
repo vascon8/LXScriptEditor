@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 
 @interface LXRulerView : NSRulerView
+- (void)invalidateLineNumberWithRecolor:(BOOL)recolor;
 @end
 
 
