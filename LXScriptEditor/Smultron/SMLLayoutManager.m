@@ -457,4 +457,20 @@ forStartingGlyphAtIndex:(NSUInteger)glyphIndex
 	outPoint.y = Y;
 	return outPoint;
 }
+- (NSRange)glyphRangeForBoundingRect:(NSRect)bounds inTextContainer:(NSTextContainer *)container
+{
+    NSRange range = [super glyphRangeForBoundingRect:bounds inTextContainer:container];
+    
+//    NSLog(@"bounds:%@,container:%@,range:%@,padding:%f,size:%@",NSStringFromRect(bounds),container,NSStringFromRange(range),container.lineFragmentPadding,NSStringFromSize(container.containerSize));
+    [(SMLTextView*)[self firstTextView] updateLineNumber];
+    return range;
+}
+//- (NSRange)glyphRangeForBoundingRectWithoutAdditionalLayout:(NSRect)bounds inTextContainer:(NSTextContainer *)container
+//{
+//    NSRange range = [super glyphRangeForBoundingRectWithoutAdditionalLayout:bounds inTextContainer:container];
+//    
+//    NSLog(@"bounds:%@,container:%@,range:%@,padding:%f,size:%@",NSStringFromRect(bounds),container,NSStringFromRange(range),container.lineFragmentPadding,NSStringFromSize(container.containerSize));
+//    [(SMLTextView*)[self firstTextView] updateLineNumber];
+//    return range;
+//}
 @end

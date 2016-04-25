@@ -1622,4 +1622,8 @@ NSString *LXMarkupPboardType = @"xinliu.EditEXample.TemplateMarkup";
 {
     [[fragaria objectForKey:ro_MGSFOSyntaxColouring] pageRecolourTextView:self];
 }
+- (void)updateLineNumber
+{
+    [(LXEditScrollView*)[self enclosingScrollView] invalidateLineNumber];
+}
 @end

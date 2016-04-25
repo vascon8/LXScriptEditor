@@ -398,7 +398,8 @@ static CGFontRef BoldLineNumberFont;
     // get glyph range which line number should be drawn
     NSRange visibleGlyphRange = [layoutManager glyphRangeForBoundingRect:visibleRect
                                                          inTextContainer:[[self textView] textContainer]];
-    
+//    NSRange typeR = [layoutManager.typesetter paragraphGlyphRange];
+//    NSLog(@"visibleGlyphRange:%@,rect:%@,typesetterR:%@",NSStringFromRange(visibleGlyphRange),NSStringFromRect(visibleRect),NSStringFromRange(typeR));
     BOOL isVerticalText = [self orientation] == NSHorizontalRuler;
     NSUInteger tailGlyphIndex = [layoutManager glyphIndexForCharacterAtIndex:[string length]];
     NSRange selectedLineRange = [string lineRangeForRange:[[self textView] selectedRange]];

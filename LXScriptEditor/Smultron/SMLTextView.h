@@ -65,4 +65,5 @@ NSString  *LXMarkupPboardType ;
 
 @property CGFloat lineSpacing;
 - (void)pageRecolor;
+- (void)updateLineNumber;
 @end
