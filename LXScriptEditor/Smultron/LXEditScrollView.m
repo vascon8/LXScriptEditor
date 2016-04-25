@@ -37,9 +37,9 @@
     [rulerV setScrollView:self];
     [rulerV setClientView:aView];
 }
-//- (void)viewBoundsDidChange:(NSNotification *)notify
-//{
-//    LXRulerView *rulerV = (LXRulerView*)self.verticalRulerView;
-//    [rulerV invalidateLineNumberWithRecolor:YES];
-//}
+- (void)viewBoundsDidChange:(NSNotification *)notify
+{
+    LXRulerView *rulerV = (LXRulerView*)self.verticalRulerView;
+    [rulerV invalidateLineNumberWithRecolor:YES];
+}
 @end

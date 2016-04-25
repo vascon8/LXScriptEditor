@@ -337,8 +337,8 @@ char kcLineWrapPrefChanged;
 //	[self.docSpec setValue:lineNumbers forKey:ro_MGSFOLineNumbers];
 
     // SMLLineNumbers will be notified of changes to the text scroll view content view due to scrolling
-//    [[NSNotificationCenter defaultCenter] addObserver:textScrollView selector:@selector(viewBoundsDidChange:) name:NSViewBoundsDidChangeNotification object:[textScrollView contentView]];
-//	[[NSNotificationCenter defaultCenter] addObserver:textScrollView selector:@selector(viewBoundsDidChange:) name:NSViewFrameDidChangeNotification object:[textScrollView contentView]];
+    [[NSNotificationCenter defaultCenter] addObserver:textScrollView selector:@selector(viewBoundsDidChange:) name:NSViewBoundsDidChangeNotification object:[textScrollView contentView]];
+	[[NSNotificationCenter defaultCenter] addObserver:textScrollView selector:@selector(viewBoundsDidChange:) name:NSViewFrameDidChangeNotification object:[textScrollView contentView]];
 
 	// create gutter scrollview
 	NSScrollView *gutterScrollView = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, gutterWidth, contentSize.height)] autorelease];

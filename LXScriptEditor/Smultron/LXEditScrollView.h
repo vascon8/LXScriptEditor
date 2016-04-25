@@ -10,5 +10,5 @@
 
 @interface LXEditScrollView : NSScrollView
 - (void)invalidateLineNumber;
-//- (void)viewBoundsDidChange:(NSNotification*)notify;
+- (void)viewBoundsDidChange:(NSNotification*)notify;
 @end

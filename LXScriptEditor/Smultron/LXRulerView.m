@@ -555,7 +555,7 @@ static CGFontRef BoldLineNumberFont;
 }
 - (void)invalidateLineNumberWithRecolor:(BOOL)recolor
 {
-    [self needsDisplay];
+//    [self needsDisplay];
     if (recolor) {
         [(SMLTextView*)[self textView] pageRecolor];
     }
